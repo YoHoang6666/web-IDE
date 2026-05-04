@@ -240,7 +240,7 @@ export class DatabasePanel {
     if (result.rows.length === 0) {
       this._showMessage(
         `No rows returned. (${result.columns.length} columns)`,
-        "info" as any
+        "info"
       );
       return;
     }

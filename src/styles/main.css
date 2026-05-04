@@ -1076,7 +1076,6 @@ body {
 
 .db-list-header span {
   flex: 1;
-  font-size: var(--font-size-sm);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
