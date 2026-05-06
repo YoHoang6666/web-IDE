@@ -17,7 +17,8 @@
         "resizable": true,
         "fullscreen": false,
         "minWidth": 1024,
-        "minHeight": 600
+        "minHeight": 600,
+        "devtools": true
       }
     ],
     "security": {
@@ -42,13 +43,6 @@
         "type": "downloadBootstrapper"
       }
     }
-  },
-  "tauri": {
-    "windows": [
-      {
-        "devtools": true
-      }
-    ]
   }
 }
 
