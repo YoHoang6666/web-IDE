@@ -42,6 +42,13 @@
         "type": "downloadBootstrapper"
       }
     }
+  },
+  "tauri": {
+    "windows": [
+      {
+        "devtools": true
+      }
+    ]
   }
 }
 
