@@ -193,11 +193,17 @@ async function init(): Promise<void> {
             split.paneB.querySelector(".preview-panel") ?? document.createElement("div"),
             dbPaneContainer
           );
-      (split.paneB.querySelector(".preview-panel") as HTMLElement | null)!.style.display = "flex";
+      const previewEl = split.paneB.querySelector(".preview-panel") as HTMLElement | null;
+      if (previewEl) {
+        previewEl.style.display = "flex";
+      }
     } else {
       btnDb.classList.add("active");
       // Show DB pane, hide preview pane.
-      (split.paneB.querySelector(".preview-panel") as HTMLElement | null)!.style.display = "none";
+      const previewEl = split.paneB.querySelector(".preview-panel") as HTMLElement | null;
+      if (previewEl) {
+        previewEl.style.display = "none";
+      }
       dbPaneContainer.style.display = "flex";
       split.setPaneBVisible(true);
     }
