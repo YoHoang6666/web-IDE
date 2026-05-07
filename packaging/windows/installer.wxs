@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="web-IDE" Manufacturer="web-IDE" Version="0.1.0" UpgradeCode="PUT-GUID-HERE">
+  <Package Name="web-IDE" Manufacturer="web-IDE" Version="0.1.0" UpgradeCode="5F75A2A1-BD06-4E3D-9F46-4C2A0D9C5A61">
     <StandardDirectory Id="ProgramFilesFolder">
       <Directory Id="INSTALLFOLDER" Name="web-IDE" />
     </StandardDirectory>

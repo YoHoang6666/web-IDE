@@ -4,6 +4,10 @@ function(webide_configure_cef target)
     return()
   endif()
 
+  if(NOT TARGET ${target})
+    message(FATAL_ERROR "webide_configure_cef expected an existing target: ${target}")
+  endif()
+
   set(CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cef")
   if(NOT EXISTS "${CEF_ROOT}")
     message(FATAL_ERROR "WEBIDE_ENABLE_CEF=ON but third_party/cef is missing")

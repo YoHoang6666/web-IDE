@@ -24,8 +24,6 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
       editorHost_(editorHost),
       previewPane_(previewPane),
       databaseManager_(databaseManager) {
-    Q_UNUSED(workspaceManager_);
-    Q_UNUSED(databaseManager_);
     buildShell();
 }
 
@@ -64,5 +62,18 @@ void MainWindow::buildShell() {
     dockLayoutManager_->captureDefaultState(saveState());
     menuController_->buildMenus();
     statusBarController_->showWorkspaceMessage(tr("Native IDE shell ready"));
+
+    if (workspaceManager_) {
+        connect(workspaceManager_, &WorkspaceManager::workspaceOpened, this, [this](const QString& path) {
+            setWindowFilePath(path);
+            statusBarController_->showWorkspaceMessage(tr("Workspace opened: %1").arg(path));
+        });
+    }
+
+    if (databaseManager_) {
+        connect(databaseManager_, &DatabaseManager::databaseAttached, this, [this](const QString& path) {
+            statusBarController_->showWorkspaceMessage(tr("Database attached: %1").arg(path));
+        });
+    }
 }
 }  // namespace webide

@@ -8,7 +8,7 @@ FileWatcherService::FileWatcherService(QObject* parent)
     debounceTimer_->setSingleShot(true);
     debounceTimer_->setInterval(120);
     connect(debounceTimer_, &QTimer::timeout, this, [this]() {
-        emit changeDetected(ChangeSet{ChangeOrigin::FileSystem, ChangeKind::Modified, pendingPath_, {}, QDateTime::currentDateTimeUtc()});
+        emit changeDetected(ChangeSet{ChangeOrigin::FileSystem, ChangeKind::Modified, pendingPath_, {}, QDateTime::currentDateTime().toUTC()});
     });
 }
 

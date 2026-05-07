@@ -13,7 +13,17 @@ void DockLayoutManager::restoreDefaultLayout() {
     }
 }
 
-void DockLayoutManager::applyEditorPreviewLayout() { restoreDefaultLayout(); }
+void DockLayoutManager::applyEditorPreviewLayout() {
+    restoreDefaultLayout();
+    window_->setDockNestingEnabled(true);
+    window_->setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
+    window_->setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
+}
 
-void DockLayoutManager::applyEditorDatabaseLayout() { restoreDefaultLayout(); }
+void DockLayoutManager::applyEditorDatabaseLayout() {
+    restoreDefaultLayout();
+    window_->setDockNestingEnabled(false);
+    window_->setCorner(Qt::TopRightCorner, Qt::BottomDockWidgetArea);
+    window_->setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
+}
 }  // namespace webide
