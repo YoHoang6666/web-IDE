@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QString>
 
-#include "src/sync/ChangeSet.h"
+#include "sync/ChangeSet.h"
 
 class QTimer;
 

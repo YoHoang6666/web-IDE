@@ -8,10 +8,10 @@
 #include "DockLayoutManager.h"
 #include "MenuController.h"
 #include "StatusBarController.h"
-#include "src/database/DatabaseManager.h"
-#include "src/editor/EditorHost.h"
-#include "src/preview/PreviewPane.h"
-#include "src/workspace/WorkspaceManager.h"
+#include "database/DatabaseManager.h"
+#include "editor/EditorHost.h"
+#include "preview/PreviewPane.h"
+#include "workspace/WorkspaceManager.h"
 
 namespace webide {
 MainWindow::MainWindow(WorkspaceManager* workspaceManager,
