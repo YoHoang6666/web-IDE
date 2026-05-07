@@ -5,6 +5,8 @@ add_executable(webide_desktop
   resources/app.qrc
 )
 
+webide_deploy_qt(webide_desktop)
+
 target_include_directories(webide_desktop PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../..

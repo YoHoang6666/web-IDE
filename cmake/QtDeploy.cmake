@@ -1,12 +1,13 @@
-function(webide_deploy_qt target)
-  if(NOT TARGET ${target})
-    return()
-  endif()
+function(webide_deploy_qt TARGET_NAME)
 
-  if(WIN32)
-    add_custom_command(TARGET ${target} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E echo "Run windeployqt for ${target} during packaging"
-      VERBATIM
+```
+if(WIN32)
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND windeployqt
+        $<TARGET_FILE:${TARGET_NAME}>
     )
-  endif()
+endif()
+```
+
 endfunction()
+

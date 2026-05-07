@@ -139,7 +139,7 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
 
   add_subdirectory(plugins)
   add_subdirectory(apps/desktop)
-  webide_deploy_qt(webide_desktop)
+  
 else()
   add_custom_target(webide_structure_check ALL
     COMMAND ${CMAKE_COMMAND} -E echo "web-IDE native structure generated without desktop dependencies"
