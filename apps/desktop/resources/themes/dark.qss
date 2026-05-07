@@ -1,0 +1,8 @@
+QMainWindow {
+    background: #1e1f26;
+    color: #f5f7fa;
+}
+QMenuBar, QStatusBar, QDockWidget {
+    background: #252733;
+    color: #f5f7fa;
+}

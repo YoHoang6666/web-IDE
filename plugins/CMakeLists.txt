@@ -1,0 +1,2 @@
+add_library(webide_plugin_sdk INTERFACE)
+target_include_directories(webide_plugin_sdk INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/sdk)

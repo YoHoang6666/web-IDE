@@ -1,0 +1,17 @@
+function(webide_configure_cef target)
+  if(NOT WEBIDE_ENABLE_CEF)
+    message(STATUS "CEF integration disabled for ${target}")
+    return()
+  endif()
+
+  set(CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cef")
+  if(NOT EXISTS "${CEF_ROOT}")
+    message(FATAL_ERROR "WEBIDE_ENABLE_CEF=ON but third_party/cef is missing")
+  endif()
+
+  add_library(webide_cef INTERFACE)
+  target_include_directories(webide_cef INTERFACE "${CEF_ROOT}/include")
+  target_compile_definitions(${target} PUBLIC WEBIDE_ENABLE_CEF=1)
+  target_link_libraries(${target} PUBLIC webide_cef)
+  message(STATUS "CEF integration prepared for ${target}")
+endfunction()

@@ -1,31 +1,14 @@
-# Node
-node_modules/
-dist/
-.vite/
-
-# Rust / Cargo
-src-tauri/target/
-src-tauri/WixTools/
-
-# Tauri bundle output
-src-tauri/gen/
-
-# IDE files
+build/
+out/
+.vs/
 .idea/
-.vscode/settings.json
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Logs
-*.log
-npm-debug.log*
-
-# Test coverage
-coverage/
+cmake-build-*/
+CMakeUserPresets.json
+*.user
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.app
+*.ipa
+*.dSYM/
