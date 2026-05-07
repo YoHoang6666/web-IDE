@@ -2,7 +2,7 @@
 
 #include <QObject>
 
-#include "src/sync/ChangeSet.h"
+#include "sync/ChangeSet.h"
 
 namespace webide {
 class PreviewPane;

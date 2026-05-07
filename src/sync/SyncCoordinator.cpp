@@ -1,9 +1,9 @@
 #include "SyncCoordinator.h"
 
-#include "src/database/DatabaseWatcherService.h"
-#include "src/preview/LiveReloadController.h"
-#include "src/preview/PreviewPane.h"
-#include "src/workspace/FileWatcherService.h"
+#include "database/DatabaseWatcherService.h"
+#include "preview/LiveReloadController.h"
+#include "preview/PreviewPane.h"
+#include "workspace/FileWatcherService.h"
 
 namespace webide {
 SyncCoordinator::SyncCoordinator(QObject* parent) : QObject(parent) {}

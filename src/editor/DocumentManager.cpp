@@ -1,6 +1,6 @@
 #include "DocumentManager.h"
 
-#include "src/workspace/FileSystemService.h"
+#include "workspace/FileSystemService.h"
 
 namespace webide {
 DocumentManager::DocumentManager(QObject* parent) : QObject(parent) {}
