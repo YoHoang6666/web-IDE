@@ -25,10 +25,6 @@ add_library(webide_core INTERFACE)
 target_include_directories(webide_core INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_features(webide_core INTERFACE cxx_std_20)
 
-target_include_directories(webide_shell PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
-
 if(WEBIDE_USE_SCINTILLA)
   target_compile_definitions(webide_core INTERFACE WEBIDE_USE_SCINTILLA=1)
 endif()
