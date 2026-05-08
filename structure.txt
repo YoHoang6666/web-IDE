@@ -1,0 +1,125 @@
+web-IDE/
+|-- CMakeLists.txt
+|-- README.md
+|-- apps/
+|   |-- desktop/
+|       |-- AppBootstrap.cpp
+|       |-- AppBootstrap.h
+|       |-- CMakeLists.txt
+|       |-- main.cpp
+|       |-- resources/
+|-- build/
+|-- cmake/
+|   |-- CEFConfig.cmake
+|   |-- CompilerWarnings.cmake
+|   |-- QtDeploy.cmake
+|   |-- Sanitizers.cmake
+|-- packaging/
+|   |-- ios/
+|   |   |-- bootstrap/
+|   |-- windows/
+|       |-- installer.iss
+|       |-- installer.wxs
+|       |-- signing/
+|-- plugins/
+|   |-- CMakeLists.txt
+|   |-- sdk/
+|       |-- PluginInterface.h
+|-- resources/
+|   |-- icons/
+|   |-- lexers/
+|   |-- themes/
+|-- src/
+|   |-- browser/
+|   |-- core/
+|   |   |-- ApplicationContext.h
+|   |   |-- CommandDispatcher.h
+|   |   |-- EventBus.h
+|   |   |-- Logger.h
+|   |   |-- ServiceRegistry.h
+|   |   |-- TaskScheduler.h
+|   |-- database/
+|   |   |-- DatabaseManager.cpp
+|   |   |-- DatabaseManager.h
+|   |   |-- DatabaseWatcherService.cpp
+|   |   |-- DatabaseWatcherService.h
+|   |   |-- MigrationService.cpp
+|   |   |-- MigrationService.h
+|   |   |-- QueryEngine.cpp
+|   |   |-- QueryEngine.h
+|   |   |-- SQLiteConnectionPool.cpp
+|   |   |-- SQLiteConnectionPool.h
+|   |   |-- TableModelAdapter.cpp
+|   |   |-- TableModelAdapter.h
+|   |-- editor/
+|   |   |-- DocumentManager.cpp
+|   |   |-- DocumentManager.h
+|   |   |-- EditorHost.cpp
+|   |   |-- EditorHost.h
+|   |   |-- EditorTabManager.cpp
+|   |   |-- EditorTabManager.h
+|   |   |-- LanguageServiceBridge.cpp
+|   |   |-- LanguageServiceBridge.h
+|   |   |-- providers/
+|   |-- filesystem/
+|   |-- platform/
+|   |-- preview/
+|   |   |-- CEFHostWidget.cpp
+|   |   |-- CEFHostWidget.h
+|   |   |-- DevToolsManager.cpp
+|   |   |-- DevToolsManager.h
+|   |   |-- LiveReloadController.cpp
+|   |   |-- LiveReloadController.h
+|   |   |-- PreviewPane.cpp
+|   |   |-- PreviewPane.h
+|   |   |-- PreviewSessionManager.cpp
+|   |   |-- PreviewSessionManager.h
+|   |-- runtime/
+|   |   |-- LocalApiBridge.cpp
+|   |   |-- LocalApiBridge.h
+|   |   |-- ScriptExecutionContext.cpp
+|   |   |-- ScriptExecutionContext.h
+|   |   |-- SecurityPolicy.cpp
+|   |   |-- SecurityPolicy.h
+|   |-- shared/
+|   |   |-- dto/
+|   |   |-- types/
+|   |   |-- utils/
+|   |-- shell/
+|   |   |-- DockLayoutManager.cpp
+|   |   |-- DockLayoutManager.h
+|   |   |-- MainWindow.cpp
+|   |   |-- MainWindow.h
+|   |   |-- MenuController.cpp
+|   |   |-- MenuController.h
+|   |   |-- StatusBarController.cpp
+|   |   |-- StatusBarController.h
+|   |-- sync/
+|   |   |-- ChangeSet.h
+|   |   |-- ConflictResolver.cpp
+|   |   |-- ConflictResolver.h
+|   |   |-- SyncCoordinator.cpp
+|   |   |-- SyncCoordinator.h
+|   |-- ui/
+|   |   |-- widgets/
+|   |   |-- windows/
+|   |-- utils/
+|   |-- workspace/
+|   |   |-- FileSystemService.cpp
+|   |   |-- FileSystemService.h
+|   |   |-- FileTreeModel.cpp
+|   |   |-- FileTreeModel.h
+|   |   |-- FileWatcherService.cpp
+|   |   |-- FileWatcherService.h
+|   |   |-- ProjectModel.cpp
+|   |   |-- ProjectModel.h
+|   |   |-- WorkspaceManager.cpp
+|   |   |-- WorkspaceManager.h
+|-- tests/
+|   |-- e2e/
+|   |-- integration/
+|   |-- unit/
+|-- third_party/
+|   |-- cef/
+|   |   |-- README.md
+|   |-- scintilla/

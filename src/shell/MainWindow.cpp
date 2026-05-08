@@ -8,10 +8,13 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QStatusBar>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QSettings>
+#include <QMainWindow>
+#include <QObject>
 
 #include "database/DatabaseManager.h"
 #include "editor/EditorHost.h"
@@ -247,18 +250,25 @@ void MainWindow::wireSignals() {
         }
     });
 
-    connect(editorArea_, &EditorAreaWidget::statusMessage, statusBar(), [this](const QString& message) {
-        statusBar()->showMessage(message, 3000);
-    });
-    connect(previewWidget_, &PreviewWidget::statusMessage, statusBar(), [this](const QString& message) {
-        statusBar()->showMessage(message, 3000);
-    });
-    connect(databaseWidget_, &DatabaseWidget::statusMessage, statusBar(), [this](const QString& message) {
-        statusBar()->showMessage(message, 4000);
-    });
-    connect(terminalWidget_, &TerminalWidget::statusMessage, statusBar(), [this](const QString& message) {
-        statusBar()->showMessage(message, 3000);
-    });
+        connect(editorArea_, &EditorAreaWidget::statusMessage, this,
+                [this](const QString& message) {
+                    statusBar()->showMessage(message, 3000);
+                });
+
+        connect(previewWidget_, &PreviewWidget::statusMessage, this,
+                [this](const QString& message) {
+                    statusBar()->showMessage(message, 3000);
+                });
+
+        connect(databaseWidget_, &DatabaseWidget::statusMessage, this,
+                [this](const QString& message) {
+                    statusBar()->showMessage(message, 4000);
+                });
+
+        connect(terminalWidget_, &TerminalWidget::statusMessage, this,
+                [this](const QString& message) {
+                    statusBar()->showMessage(message, 3000);
+                });
 
     connect(databaseWidget_, &DatabaseWidget::databaseOpened, this, [this](const QString& path) {
         if (databaseManager_) {

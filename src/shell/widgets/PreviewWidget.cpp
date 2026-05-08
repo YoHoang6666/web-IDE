@@ -10,8 +10,8 @@
 #include <QVBoxLayout>
 #include <QtWebEngineCore/QWebEngineUrlRequestInfo>
 #include <QtWebEngineCore/QWebEngineUrlRequestInterceptor>
-#include <QtWebEngineWidgets/QWebEnginePage>
-#include <QtWebEngineWidgets/QWebEngineProfile>
+#include <QtWebEngineCore/QWebEnginePage>
+#include <QtWebEngineCore/QWebEngineProfile>
 #include <QtWebEngineWidgets/QWebEngineView>
 
 #include "NetworkWidget.h"
@@ -55,7 +55,7 @@ PreviewWidget::PreviewWidget(QWidget* parent)
       devToolsPage_(new QWebEnginePage(profile_, this)),
       fileWatcher_(new QFileSystemWatcher(this)) {
     auto* interceptor = new RequestInterceptor(this);
-    profile_->setUrlRequestInterceptor(interceptor);
+    profile_->setRequestInterceptor(interceptor);
 
     previewView_->setPage(previewPage_);
     devToolsView_->setPage(devToolsPage_);
