@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <QStringList>
 
 class QApplication;
-class QStringList;
 
 namespace webide {
 class MainWindow;
