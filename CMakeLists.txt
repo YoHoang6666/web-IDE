@@ -33,7 +33,17 @@ if(WEBIDE_USE_MONACO)
 endif()
 
 if(WEBIDE_ENABLE_DESKTOP_APP)
-  find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent WebEngineWidgets WebEngineCore)
+  find_package(Qt6 REQUIRED COMPONENTS
+    Core
+    Gui
+    Widgets
+    Network
+    Sql
+    Concurrent
+    WebEngineCore
+    WebEngineWidgets
+    WebChannel
+  )
 
   if(COMMAND qt_standard_project_setup)
     qt_standard_project_setup()
