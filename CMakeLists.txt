@@ -33,7 +33,7 @@ if(WEBIDE_USE_MONACO)
 endif()
 
 if(WEBIDE_ENABLE_DESKTOP_APP)
-  find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent)
+  find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent WebEngineWidgets WebEngineCore)
 
   if(COMMAND qt_standard_project_setup)
     qt_standard_project_setup()
@@ -48,8 +48,20 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
     src/shell/StatusBarController.h
     src/shell/MenuController.cpp
     src/shell/MenuController.h
+    src/shell/widgets/FileExplorerWidget.cpp
+    src/shell/widgets/FileExplorerWidget.h
+    src/shell/widgets/EditorAreaWidget.cpp
+    src/shell/widgets/EditorAreaWidget.h
+    src/shell/widgets/PreviewWidget.cpp
+    src/shell/widgets/PreviewWidget.h
+    src/shell/widgets/DatabaseWidget.cpp
+    src/shell/widgets/DatabaseWidget.h
+    src/shell/widgets/TerminalWidget.cpp
+    src/shell/widgets/TerminalWidget.h
+    src/shell/widgets/NetworkWidget.cpp
+    src/shell/widgets/NetworkWidget.h
   )
-  target_link_libraries(webide_shell PUBLIC webide_core Qt6::Core Qt6::Gui Qt6::Widgets)
+  target_link_libraries(webide_shell PUBLIC webide_core Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql Qt6::WebEngineWidgets Qt6::WebEngineCore)
   webide_set_common_warnings(webide_shell)
 
   add_library(webide_workspace STATIC
