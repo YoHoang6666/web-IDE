@@ -29,51 +29,221 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
 
 void MainWindow::buildShell() {
     setWindowTitle("web-IDE");
-    resize(1600, 960);
+    resize(1700, 1000);
 
+    // =========================
+    // GLOBAL DARK THEME
+    // =========================
+    qApp->setStyleSheet(R"(
+        QMainWindow {
+            background: #1e1e1e;
+        }
+
+        QWidget {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: Segoe UI;
+            font-size: 13px;
+        }
+
+        QMenuBar {
+            background: #2d2d30;
+            color: white;
+        }
+
+        QMenuBar::item:selected {
+            background: #3e3e42;
+        }
+
+        QMenu {
+            background: #252526;
+            color: white;
+        }
+
+        QDockWidget {
+            titlebar-close-icon: none;
+            titlebar-normal-icon: none;
+        }
+
+        QDockWidget::title {
+            background: #2d2d30;
+            padding: 6px;
+            border: none;
+        }
+
+        QTreeView {
+            background: #252526;
+            border: none;
+        }
+
+        QPlainTextEdit {
+            background: #1e1e1e;
+            color: #dcdcdc;
+            border: none;
+            font-family: Consolas;
+            font-size: 14px;
+            selection-background-color: #264f78;
+        }
+
+        QTextEdit {
+            background: #1e1e1e;
+            border: none;
+        }
+
+        QSplitter::handle {
+            background: #333333;
+        }
+
+        QStatusBar {
+            background: #007acc;
+            color: white;
+        }
+    )");
+
+    // =========================
+    // PROJECT EXPLORER
+    // =========================
     auto* projectTree = new QTreeView(this);
-    explorerDock_ = new QDockWidget(tr("Project Explorer"), this);
+
+    explorerDock_ = new QDockWidget(tr("Explorer"), this);
     explorerDock_->setWidget(projectTree);
+
     addDockWidget(Qt::LeftDockWidgetArea, explorerDock_);
 
-    auto* editorCenter = new QSplitter(Qt::Horizontal, this);
-    editorCenter->addWidget(editorHost_);
-    editorCenter->addWidget(new QLabel(tr("Secondary editor split"), this));
-    setCentralWidget(editorCenter);
+    // =========================
+    // MAIN EDITOR AREA
+    // =========================
+    auto* editorSplitter = new QSplitter(Qt::Horizontal, this);
 
+    auto* primaryEditor = new QPlainTextEdit(this);
+    auto* secondaryEditor = new QPlainTextEdit(this);
+
+    primaryEditor->setPlaceholderText("Start coding...");
+    secondaryEditor->setPlaceholderText("Secondary split editor");
+
+    primaryEditor->setPlainText(
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<head>\n"
+        "    <title>web-IDE</title>\n"
+        "</head>\n"
+        "<body>\n"
+        "    <h1>Hello World</h1>\n"
+        "</body>\n"
+        "</html>"
+    );
+
+    editorSplitter->addWidget(primaryEditor);
+    editorSplitter->addWidget(secondaryEditor);
+
+    editorSplitter->setStretchFactor(0, 3);
+    editorSplitter->setStretchFactor(1, 2);
+
+    setCentralWidget(editorSplitter);
+
+    // =========================
+    // LIVE PREVIEW PANEL
+    // =========================
     previewDock_ = new QDockWidget(tr("Preview"), this);
-    previewDock_->setWidget(previewPane_);
+
+    auto* previewLabel = new QTextEdit(this);
+    previewLabel->setReadOnly(true);
+
+    previewLabel->setHtml(R"(
+        <html>
+        <body style="background:#1e1e1e;color:white;font-family:sans-serif;">
+            <h1>Live Preview</h1>
+            <p>HTML preview engine coming soon.</p>
+        </body>
+        </html>
+    )");
+
+    previewDock_->setWidget(previewLabel);
+
     addDockWidget(Qt::RightDockWidgetArea, previewDock_);
 
+    // =========================
+    // DATABASE PANEL
+    // =========================
     databaseDock_ = new QDockWidget(tr("Database"), this);
-    databaseDock_->setWidget(new QLabel(tr("SQLite tables and query tools"), this));
+
+    auto* databaseEditor = new QTextEdit(this);
+
+    databaseEditor->setPlainText(
+        "-- SQLite Query Console\n"
+        "SELECT * FROM users;"
+    );
+
+    databaseDock_->setWidget(databaseEditor);
+
     addDockWidget(Qt::BottomDockWidgetArea, databaseDock_);
 
-    consoleDock_ = new QDockWidget(tr("Problems / Console"), this);
-    consoleDock_->setWidget(new QLabel(tr("Build output, logs, and diagnostics"), this));
+    // =========================
+    // CONSOLE PANEL
+    // =========================
+    consoleDock_ = new QDockWidget(tr("Console"), this);
+
+    auto* consoleOutput = new QTextEdit(this);
+
+    consoleOutput->setPlainText(
+        "[INFO] web-IDE started successfully\n"
+        "[INFO] Native editor initialized\n"
+    );
+
+    consoleOutput->setReadOnly(true);
+
+    consoleDock_->setWidget(consoleOutput);
+
     addDockWidget(Qt::BottomDockWidgetArea, consoleDock_);
 
+    // =========================
+    // TABIFY LOWER PANELS
+    // =========================
     tabifyDockWidget(databaseDock_, consoleDock_);
 
+    // =========================
+    // SERVICES
+    // =========================
     dockLayoutManager_ = new DockLayoutManager(this);
     menuController_ = new MenuController(this);
     statusBarController_ = new StatusBarController(statusBar(), this);
 
     dockLayoutManager_->captureDefaultState(saveState());
-    menuController_->buildMenus();
-    statusBarController_->showWorkspaceMessage(tr("Native IDE shell ready"));
 
+    menuController_->buildMenus();
+
+    statusBarController_->showWorkspaceMessage(
+        tr("web-IDE ready")
+    );
+
+    // =========================
+    // SIGNALS
+    // =========================
     if (workspaceManager_) {
-        connect(workspaceManager_, &WorkspaceManager::workspaceOpened, this, [this](const QString& path) {
-            setWindowFilePath(path);
-            statusBarController_->showWorkspaceMessage(tr("Workspace opened: %1").arg(path));
-        });
+        connect(
+            workspaceManager_,
+            &WorkspaceManager::workspaceOpened,
+            this,
+            [this](const QString& path) {
+                setWindowFilePath(path);
+
+                statusBarController_->showWorkspaceMessage(
+                    tr("Workspace opened: %1").arg(path)
+                );
+            }
+        );
     }
 
     if (databaseManager_) {
-        connect(databaseManager_, &DatabaseManager::databaseAttached, this, [this](const QString& path) {
-            statusBarController_->showWorkspaceMessage(tr("Database attached: %1").arg(path));
-        });
+        connect(
+            databaseManager_,
+            &DatabaseManager::databaseAttached,
+            this,
+            [this](const QString& path) {
+                statusBarController_->showWorkspaceMessage(
+                    tr("Database attached: %1").arg(path)
+                );
+            }
+        );
     }
-}
 }  // namespace webide

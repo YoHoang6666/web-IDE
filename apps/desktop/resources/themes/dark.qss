@@ -1,8 +1,32 @@
 QMainWindow {
-    background: #1e1f26;
-    color: #f5f7fa;
+background-color: #1e1e1e;
 }
-QMenuBar, QStatusBar, QDockWidget {
-    background: #252733;
-    color: #f5f7fa;
+
+QMenuBar {
+background-color: #252526;
+color: white;
+}
+
+QMenuBar::item:selected {
+background-color: #37373d;
+}
+
+QDockWidget {
+background-color: #252526;
+color: white;
+}
+
+QTreeView {
+background-color: #1e1e1e;
+color: #d4d4d4;
+border: none;
+}
+
+QTabWidget::pane {
+border: none;
+}
+
+QStatusBar {
+background-color: #007acc;
+color: white;
 }
