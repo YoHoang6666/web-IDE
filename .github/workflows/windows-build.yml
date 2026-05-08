@@ -52,4 +52,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webide-windows
-          path: build/Release
+          path: |
+            build/Release
+            packaging/windows/dist
