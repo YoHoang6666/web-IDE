@@ -18,6 +18,7 @@ jobs:
         with:
           version: 6.6.2
           arch: win64_msvc2019_64
+          modules: qtwebengine
 
       - name: Configure CMake
         run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
