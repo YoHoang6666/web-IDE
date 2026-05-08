@@ -13,6 +13,10 @@
 #include <QVBoxLayout>
 
 namespace webide {
+bool EditorAreaWidget::isHtmlFile(const QString& filePath) {
+    return filePath.endsWith(".html", Qt::CaseInsensitive) || filePath.endsWith(".htm", Qt::CaseInsensitive);
+}
+
 EditorAreaWidget::EditorAreaWidget(QWidget* parent)
     : QWidget(parent),
       splitter_(new QSplitter(Qt::Horizontal, this)),
@@ -58,9 +62,9 @@ QPlainTextEdit* EditorAreaWidget::createEditor() {
     auto* editor = new QPlainTextEdit(this);
     editor->setLineWrapMode(QPlainTextEdit::NoWrap);
 
-    QFont font(QStringLiteral("Consolas"));
+    QFont font;
     font.setStyleHint(QFont::Monospace);
-    font.setFamilies({QStringLiteral("Consolas"), QStringLiteral("JetBrains Mono"), QStringLiteral("Monospace")});
+    font.setFamilies({QStringLiteral("Consolas"), QStringLiteral("Monospace"), QStringLiteral("JetBrains Mono")});
     font.setPointSize(11);
     editor->setFont(font);
 
@@ -71,7 +75,7 @@ QPlainTextEdit* EditorAreaWidget::createEditor() {
     connect(editor, &QPlainTextEdit::textChanged, this, [this, editor]() {
         updateTabTitle(editor);
         const auto info = tabInfo_.value(editor);
-        const bool isHtml = info.filePath.endsWith(".html", Qt::CaseInsensitive) || info.filePath.endsWith(".htm", Qt::CaseInsensitive);
+        const bool isHtml = isHtmlFile(info.filePath);
         emit documentContentChanged(info.filePath, editor->toPlainText(), isHtml);
     });
 
@@ -272,7 +276,7 @@ bool EditorAreaWidget::emitCurrentFileState() {
     }
 
     const auto info = tabInfo_.value(editor);
-    const bool isHtml = info.filePath.endsWith(".html", Qt::CaseInsensitive) || info.filePath.endsWith(".htm", Qt::CaseInsensitive);
+    const bool isHtml = isHtmlFile(info.filePath);
     emit currentFileChanged(info.filePath, editor->toPlainText(), isHtml);
     return true;
 }

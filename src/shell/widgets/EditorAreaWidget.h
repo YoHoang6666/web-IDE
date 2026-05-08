@@ -48,6 +48,7 @@ private:
     void setActiveTabWidget(QTabWidget* tabs);
     void updateTabTitle(QPlainTextEdit* editor);
     QString tabTitleFor(QPlainTextEdit* editor) const;
+    static bool isHtmlFile(const QString& filePath);
     bool saveEditor(QPlainTextEdit* editor, bool forceSaveAs);
     int indexOfEditor(QTabWidget* tabs, QPlainTextEdit* editor) const;
     bool closeEditorAt(QTabWidget* tabs, int index);

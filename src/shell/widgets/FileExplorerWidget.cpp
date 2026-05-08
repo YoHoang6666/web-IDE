@@ -197,8 +197,7 @@ void FileExplorerWidget::refresh() {
     if (workspaceRoot_.isEmpty()) {
         return;
     }
-    const QModelIndex rootIndex = model_->setRootPath(QString());
-    Q_UNUSED(rootIndex);
-    treeView_->setRootIndex(model_->setRootPath(workspaceRoot_));
+    const QModelIndex rootIndex = model_->setRootPath(workspaceRoot_);
+    treeView_->setRootIndex(rootIndex);
 }
 }  // namespace webide

@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDockWidget>
+#include <QDebug>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -24,6 +25,10 @@
 #include "workspace/WorkspaceManager.h"
 
 namespace webide {
+namespace {
+constexpr auto kThemePath = ":/webide/themes/dark.qss";
+}
+
 MainWindow::MainWindow(WorkspaceManager* workspaceManager,
                        EditorHost* editorHost,
                        PreviewPane* previewPane,
@@ -31,8 +36,6 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
                        QWidget* parent)
     : QMainWindow(parent),
       workspaceManager_(workspaceManager),
-      editorHost_(editorHost),
-      previewPane_(previewPane),
       databaseManager_(databaseManager),
       explorerWidget_(new FileExplorerWidget(this)),
       editorArea_(new EditorAreaWidget(this)),
@@ -46,8 +49,8 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
       terminalDock_(new QDockWidget(tr("Terminal"), this)),
       networkDock_(new QDockWidget(tr("Network"), this)),
       settings_(new QSettings(QStringLiteral("web-IDE"), QStringLiteral("web-IDE"), this)) {
-    Q_UNUSED(editorHost_);
-    Q_UNUSED(previewPane_);
+    Q_UNUSED(editorHost);
+    Q_UNUSED(previewPane);
     buildShell();
 }
 
@@ -234,9 +237,6 @@ void MainWindow::wireSignals() {
     connect(editorArea_, &EditorAreaWidget::currentFileChanged, this, [this](const QString& filePath, const QString& content, bool isHtml) {
         updateWindowTitle();
         if (isHtml) {
-            if (!filePath.isEmpty() && QFileInfo::exists(filePath)) {
-                previewWidget_->previewFile(filePath);
-            }
             previewWidget_->previewHtmlContent(content, filePath);
         }
     });
@@ -275,9 +275,11 @@ void MainWindow::wireSignals() {
 }
 
 void MainWindow::applyTheme() {
-    QFile stylesheet(QStringLiteral(":/webide/themes/dark.qss"));
+    QFile stylesheet(QString::fromLatin1(kThemePath));
     if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qApp->setStyleSheet(QString::fromUtf8(stylesheet.readAll()));
+    } else {
+        qWarning() << "Failed to load dark theme from resources";
     }
 }
 

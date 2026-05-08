@@ -140,8 +140,17 @@ void PreviewWidget::previewFile(const QString& filePath) {
 }
 
 void PreviewWidget::previewHtmlContent(const QString& html, const QString& sourcePath) {
-    const QUrl baseUrl = sourcePath.isEmpty() ? QUrl() : QUrl::fromLocalFile(QFileInfo(sourcePath).absolutePath() + QLatin1Char('/'));
-    previewView_->setHtml(html, baseUrl);
+    if (!sourcePath.isEmpty()) {
+        currentFile_ = sourcePath;
+        const QStringList watched = fileWatcher_->files();
+        if (!watched.isEmpty()) {
+            fileWatcher_->removePaths(watched);
+        }
+        if (QFileInfo::exists(sourcePath)) {
+            fileWatcher_->addPath(sourcePath);
+        }
+    }
+    previewView_->setHtml(html, baseUrlForSource(sourcePath));
 }
 
 void PreviewWidget::refresh() { previewView_->reload(); }
@@ -153,6 +162,13 @@ void PreviewWidget::goForward() { previewView_->forward(); }
 void PreviewWidget::toggleDevTools(bool visible) { devToolsView_->setVisible(visible); }
 
 bool PreviewWidget::isDevToolsVisible() const { return devToolsView_->isVisible(); }
+
+QUrl PreviewWidget::baseUrlForSource(const QString& sourcePath) {
+    if (sourcePath.isEmpty()) {
+        return {};
+    }
+    return QUrl::fromLocalFile(QFileInfo(sourcePath).absolutePath() + QLatin1Char('/'));
+}
 
 void PreviewWidget::reloadCurrentFile() {
     if (currentFile_.isEmpty()) {

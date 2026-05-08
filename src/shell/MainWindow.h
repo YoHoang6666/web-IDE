@@ -41,8 +41,6 @@ private:
     void updateWindowTitle();
 
     WorkspaceManager* workspaceManager_;
-    EditorHost* editorHost_;
-    PreviewPane* previewPane_;
     DatabaseManager* databaseManager_;
 
     FileExplorerWidget* explorerWidget_;

@@ -14,10 +14,17 @@
 #include <QSqlRecord>
 #include <QSqlTableModel>
 #include <QTableView>
-#include <QUuid>
 #include <QVBoxLayout>
+#include <atomic>
 
 namespace webide {
+namespace {
+int nextConnectionId() {
+    static std::atomic<int> counter{0};
+    return ++counter;
+}
+}  // namespace
+
 DatabaseWidget::DatabaseWidget(QWidget* parent)
     : QWidget(parent),
       tablesList_(new QListWidget(this)),
@@ -29,7 +36,7 @@ DatabaseWidget::DatabaseWidget(QWidget* parent)
       deleteRowButton_(new QPushButton(tr("Delete Row"), this)),
       tableModel_(new QSqlTableModel(this)),
       queryModel_(new QSqlQueryModel(this)),
-      connectionName_(QStringLiteral("webide-db-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces))) {
+      connectionName_(QStringLiteral("webide-db-connection-%1").arg(nextConnectionId())) {
     setupUi();
 
     tableView_->setModel(tableModel_);
@@ -109,7 +116,7 @@ bool DatabaseWidget::openDatabase(const QString& path) {
     }
 
     databasePath_ = path;
-    tableModel_->setTable({});
+    tableModel_->setTable(QString());
     tableModel_->setEditStrategy(QSqlTableModel::OnFieldChange);
     queryModel_->setQuery(QSqlQuery(db));
 

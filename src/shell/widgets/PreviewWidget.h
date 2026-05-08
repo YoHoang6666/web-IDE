@@ -4,6 +4,7 @@
 
 class QFileSystemWatcher;
 class QToolBar;
+class QUrl;
 class QWebEnginePage;
 class QWebEngineProfile;
 class QWebEngineView;
@@ -33,6 +34,7 @@ signals:
 private:
     void setupUi();
     void setupContextMenu();
+    static QUrl baseUrlForSource(const QString& sourcePath);
     void reloadCurrentFile();
 
     QToolBar* toolbar_;
