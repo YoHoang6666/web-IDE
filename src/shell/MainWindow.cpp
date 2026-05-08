@@ -149,19 +149,14 @@ void MainWindow::buildShell() {
     // =========================
     previewDock_ = new QDockWidget(tr("Preview"), this);
 
-    auto* previewLabel = new QTextEdit(this);
-    previewLabel->setReadOnly(true);
-
-    previewLabel->setHtml(R"(
-        <html>
-        <body style="background:#1e1e1e;color:white;font-family:sans-serif;">
-            <h1>Live Preview</h1>
-            <p>HTML preview engine coming soon.</p>
-        </body>
-        </html>
-    )");
-
-    previewDock_->setWidget(previewLabel);
+    if (previewPane_) {
+        previewDock_->setWidget(previewPane_);
+    } else {
+        auto* previewFallback = new QTextEdit(this);
+        previewFallback->setReadOnly(true);
+        previewFallback->setPlainText(tr("Preview is unavailable."));
+        previewDock_->setWidget(previewFallback);
+    }
 
     addDockWidget(Qt::RightDockWidgetArea, previewDock_);
 
