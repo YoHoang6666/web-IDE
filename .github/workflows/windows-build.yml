@@ -25,9 +25,28 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
+      - name: List build output
+        run: dir build\Release
+
+      - name: Find executable
+        id: findexe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem build/Release/*.exe | Select-Object -First 1
+          echo "exe=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+
       - name: Deploy Qt
         run: |
-          windeployqt build/Release/webide_desktop.exe
+          windeployqt build/Release/web-ide.exe
+
+            # ADD THIS
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      # ADD THIS
+      - name: Build Installer
+        run: |
+          iscc packaging/windows/installer.iss
 
       - name: Upload Build
         uses: actions/upload-artifact@v4

@@ -9,11 +9,11 @@ Compression=lzma
 SolidCompression=yes
 
 [Files]
-Source: "release*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "build\Release\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Icons]
-Name: "{group}\webIDE"; Filename: "{app}\webIDE.exe"
-Name: "{commondesktop}\webIDE"; Filename: "{app}\webIDE.exe"
+Name: "{group}\webIDE"; Filename: "{app}\web-ide.exe"
+Name: "{commondesktop}\webIDE"; Filename: "{app}\web-ide.exe"
 
 [Run]
-Filename: "{app}\webIDE.exe"; Description: "Launch webIDE"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\web-ide.exe"; Description: "Launch webIDE"; Flags: nowait postinstall skipifsilent
