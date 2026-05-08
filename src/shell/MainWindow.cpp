@@ -249,4 +249,6 @@ void MainWindow::buildShell() {
             }
         );
     }
+}
+
 }  // namespace webide
