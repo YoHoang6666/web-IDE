@@ -1,48 +1,36 @@
-name: Build webIDE Installer
+name: Build web-IDE
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main
 
 jobs:
-build:
-runs-on: windows-latest
+  build-windows:
+    runs-on: windows-latest
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Install Qt
-    uses: jurplel/install-qt-action@v4
-    with:
-      version: 6.6.2
-      arch: win64_msvc2019_64
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.6.2
+          arch: win64_msvc2019_64
 
-  - name: Configure CMake
-    run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
-  - name: Build
-    run: cmake --build build --config Release
+      - name: Build
+        run: cmake --build build --config Release
 
-  - name: Create release folder
-    run: |
-      mkdir release
-      copy build\Release\webIDE.exe release\
+      - name: Deploy Qt
+        run: |
+          windeployqt build/Release/webide_desktop.exe
 
-  - name: Deploy Qt
-    run: |
-      windeployqt release\webIDE.exe
-
-  - name: Install Inno Setup
-    run: choco install innosetup -y
-
-  - name: Build Installer
-    run: |
-      iscc packaging/windows/installer.iss
-
-  - name: Upload Installer
-    uses: actions/upload-artifact@v4
-    with:
-      name: webIDE-installer
-      path: dist/webIDE-setup.exe
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: webide-windows
+          path: build/Release
