@@ -4,6 +4,9 @@
 #include <QLabel>
 #include <QSplitter>
 #include <QTreeView>
+#include <QApplication>
+#include <QPlainTextEdit>
+#include <QTextEdit>
 
 #include "DockLayoutManager.h"
 #include "MenuController.h"
