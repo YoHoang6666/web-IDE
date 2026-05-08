@@ -9,7 +9,7 @@ Compression=lzma
 SolidCompression=yes
 
 [Files]
-Source: "build\Release\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "..\..\build\Release\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Icons]
 Name: "{group}\webIDE"; Filename: "{app}\web-ide.exe"
