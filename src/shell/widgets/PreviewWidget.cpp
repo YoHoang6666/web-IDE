@@ -8,6 +8,7 @@
 #include <QMetaObject>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QSplitter>
 #include <QtWebEngineCore/QWebEngineUrlRequestInfo>
 #include <QtWebEngineCore/QWebEngineUrlRequestInterceptor>
 #include <QtWebEngineCore/QWebEnginePage>
@@ -54,8 +55,8 @@ PreviewWidget::PreviewWidget(QWidget* parent)
       previewPage_(new QWebEnginePage(profile_, this)),
       devToolsPage_(new QWebEnginePage(profile_, this)),
       fileWatcher_(new QFileSystemWatcher(this)) {
-    auto* interceptor = new RequestInterceptor(this);
-    profile_->setRequestInterceptor(interceptor);
+    requestInterceptor_ = new RequestInterceptor(this);
+    profile_->setUrlRequestInterceptor(requestInterceptor_);
 
     previewView_->setPage(previewPage_);
     devToolsView_->setPage(devToolsPage_);
@@ -118,8 +119,8 @@ void PreviewWidget::setupContextMenu() {
 }
 
 void PreviewWidget::setNetworkWidget(NetworkWidget* networkWidget) {
-    if (auto* interceptor = qobject_cast<RequestInterceptor*>(profile_->urlRequestInterceptor())) {
-        interceptor->setNetworkWidget(networkWidget);
+    if (requestInterceptor_) {
+        requestInterceptor_->setNetworkWidget(networkWidget);
     }
 }
 
