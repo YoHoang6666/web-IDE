@@ -9,7 +9,7 @@ class QWebEnginePage;
 class QWebEngineProfile;
 class QWebEngineView;
 class QSplitter;
-class RequestInterceptor;
+#include <QtWebEngineCore/QWebEngineUrlRequestInterceptor>
 
 namespace webide {
 class NetworkWidget;
@@ -38,7 +38,7 @@ private:
     static QUrl baseUrlForSource(const QString& sourcePath);
     void reloadCurrentFile();
 
-    RequestInterceptor* requestInterceptor_ = nullptr;
+    QWebEngineUrlRequestInterceptor* requestInterceptor_ = nullptr;
     QToolBar* toolbar_;
     QSplitter* splitter_;
     QWebEngineView* previewView_;

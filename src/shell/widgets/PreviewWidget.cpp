@@ -119,8 +119,13 @@ void PreviewWidget::setupContextMenu() {
 }
 
 void PreviewWidget::setNetworkWidget(NetworkWidget* networkWidget) {
-    if (requestInterceptor_) {
-        requestInterceptor_->setNetworkWidget(networkWidget);
+    auto* interceptor =
+        dynamic_cast<RequestInterceptor*>(
+            requestInterceptor_);
+
+    if (interceptor) {
+        interceptor->setNetworkWidget(
+            networkWidget);
     }
 }
 
