@@ -104,7 +104,7 @@ void PreviewWidget::setupUi() {
 void PreviewWidget::setupContextMenu() {
     previewView_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(previewView_, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
-        QMenu* menu = previewPage_->createStandardContextMenu();
+        QMenu* menu = previewView_->createStandardContextMenu();
         menu->addSeparator();
         QAction* inspectAction = menu->addAction(tr("Inspect Element"));
 
