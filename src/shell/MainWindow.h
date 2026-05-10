@@ -1,11 +1,14 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QPointer>
 
 class QDockWidget;
 class QSettings;
+class QWidget;
 
 namespace webide {
+class PanelRegistry;
 class WorkspaceManager;
 class EditorHost;
 class PreviewPane;
@@ -32,9 +35,10 @@ protected:
 
 private:
     void buildShell();
-    void buildDocks();
+    void registerPanels();
     void buildMenus();
     void wireSignals();
+    void handlePanelReady(const QString& id, QWidget* widget);
     void loadState();
     void saveStateToSettings();
     void applyTheme();
@@ -43,18 +47,14 @@ private:
     WorkspaceManager* workspaceManager_;
     DatabaseManager* databaseManager_;
 
-    FileExplorerWidget* explorerWidget_;
+    PanelRegistry* panelRegistry_;
     EditorAreaWidget* editorArea_;
-    PreviewWidget* previewWidget_;
-    DatabaseWidget* databaseWidget_;
-    TerminalWidget* terminalWidget_;
-    NetworkWidget* networkWidget_;
 
-    QDockWidget* explorerDock_;
-    QDockWidget* previewDock_;
-    QDockWidget* databaseDock_;
-    QDockWidget* terminalDock_;
-    QDockWidget* networkDock_;
+    QPointer<FileExplorerWidget> explorerWidget_;
+    QPointer<PreviewWidget> previewWidget_;
+    QPointer<DatabaseWidget> databaseWidget_;
+    QPointer<TerminalWidget> terminalWidget_;
+    QPointer<NetworkWidget> networkWidget_;
 
     QSettings* settings_;
     QString currentWorkspace_;

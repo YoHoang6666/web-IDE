@@ -54,6 +54,8 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
     src/shell/MainWindow.h
     src/shell/DockLayoutManager.cpp
     src/shell/DockLayoutManager.h
+    src/shell/PanelRegistry.cpp
+    src/shell/PanelRegistry.h
     src/shell/StatusBarController.cpp
     src/shell/StatusBarController.h
     src/shell/MenuController.cpp

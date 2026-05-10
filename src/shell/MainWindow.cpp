@@ -15,6 +15,7 @@
 #include <QMainWindow>
 #include <QObject>
 
+#include "PanelRegistry.h"
 #include "database/DatabaseManager.h"
 #include "editor/EditorHost.h"
 #include "preview/PreviewPane.h"
@@ -40,17 +41,8 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
     : QMainWindow(parent),
       workspaceManager_(workspaceManager),
       databaseManager_(databaseManager),
-      explorerWidget_(new FileExplorerWidget(this)),
+      panelRegistry_(new PanelRegistry(this, this)),
       editorArea_(new EditorAreaWidget(this)),
-      previewWidget_(new PreviewWidget(this)),
-      databaseWidget_(new DatabaseWidget(this)),
-      terminalWidget_(new TerminalWidget(this)),
-      networkWidget_(new NetworkWidget(this)),
-      explorerDock_(new QDockWidget(tr("Explorer"), this)),
-      previewDock_(new QDockWidget(tr("Preview"), this)),
-      databaseDock_(new QDockWidget(tr("Database"), this)),
-      terminalDock_(new QDockWidget(tr("Terminal"), this)),
-      networkDock_(new QDockWidget(tr("Network"), this)),
       settings_(new QSettings(QStringLiteral("web-IDE"), QStringLiteral("web-IDE"), this)) {
     Q_UNUSED(editorHost);
     Q_UNUSED(previewPane);
@@ -60,10 +52,8 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
 void MainWindow::buildShell() {
     resize(1700, 1000);
     setCentralWidget(editorArea_);
-
-    previewWidget_->setNetworkWidget(networkWidget_);
-
-    buildDocks();
+    connect(panelRegistry_, &PanelRegistry::panelReady, this, &MainWindow::handlePanelReady);
+    registerPanels();
     buildMenus();
     wireSignals();
     applyTheme();
@@ -72,23 +62,51 @@ void MainWindow::buildShell() {
     statusBar()->showMessage(tr("web-IDE ready"));
 }
 
-void MainWindow::buildDocks() {
-    explorerDock_->setWidget(explorerWidget_);
-    previewDock_->setWidget(previewWidget_);
-    databaseDock_->setWidget(databaseWidget_);
-    terminalDock_->setWidget(terminalWidget_);
-    networkDock_->setWidget(networkWidget_);
+void MainWindow::registerPanels() {
+    panelRegistry_->registerPanel({QStringLiteral("explorer"),
+                                   tr("Explorer"),
+                                   Qt::LeftDockWidgetArea,
+                                   true,
+                                   QStringLiteral("core"),
+                                   [](QWidget* parent) { return new FileExplorerWidget(parent); }});
+    panelRegistry_->registerPanel({QStringLiteral("preview"),
+                                   tr("Preview"),
+                                   Qt::RightDockWidgetArea,
+                                   true,
+                                   QStringLiteral("core"),
+                                   [](QWidget* parent) { return new PreviewWidget(parent); }});
+    panelRegistry_->registerPanel({QStringLiteral("database"),
+                                   tr("Database"),
+                                   Qt::BottomDockWidgetArea,
+                                   true,
+                                   QStringLiteral("core"),
+                                   [](QWidget* parent) { return new DatabaseWidget(parent); }});
+    panelRegistry_->registerPanel({QStringLiteral("terminal"),
+                                   tr("Terminal"),
+                                   Qt::BottomDockWidgetArea,
+                                   true,
+                                   QStringLiteral("core"),
+                                   [](QWidget* parent) { return new TerminalWidget(parent); }});
+    panelRegistry_->registerPanel({QStringLiteral("network"),
+                                   tr("Network"),
+                                   Qt::BottomDockWidgetArea,
+                                   true,
+                                   QStringLiteral("core"),
+                                   [](QWidget* parent) { return new NetworkWidget(parent); }});
 
-    addDockWidget(Qt::LeftDockWidgetArea, explorerDock_);
-    addDockWidget(Qt::RightDockWidgetArea, previewDock_);
-    addDockWidget(Qt::BottomDockWidgetArea, terminalDock_);
-    addDockWidget(Qt::BottomDockWidgetArea, databaseDock_);
-    addDockWidget(Qt::BottomDockWidgetArea, networkDock_);
+    auto* terminalDock = panelRegistry_->dockWidget(QStringLiteral("terminal"));
+    auto* databaseDock = panelRegistry_->dockWidget(QStringLiteral("database"));
+    auto* networkDock = panelRegistry_->dockWidget(QStringLiteral("network"));
 
-    tabifyDockWidget(terminalDock_, databaseDock_);
-    tabifyDockWidget(databaseDock_, networkDock_);
-
-    terminalDock_->raise();
+    if (terminalDock && databaseDock) {
+        tabifyDockWidget(terminalDock, databaseDock);
+    }
+    if (databaseDock && networkDock) {
+        tabifyDockWidget(databaseDock, networkDock);
+    }
+    if (terminalDock) {
+        terminalDock->raise();
+    }
 }
 
 void MainWindow::buildMenus() {
@@ -124,26 +142,34 @@ void MainWindow::buildMenus() {
     copyAction->setShortcut(QKeySequence::Copy);
     pasteAction->setShortcut(QKeySequence::Paste);
 
-    QAction* explorerToggleAction = viewMenu->addAction(tr("Toggle Explorer"));
-    QAction* previewToggleAction = viewMenu->addAction(tr("Toggle Preview"));
-    QAction* databaseToggleAction = viewMenu->addAction(tr("Toggle Database"));
-    QAction* terminalToggleAction = viewMenu->addAction(tr("Toggle Terminal"));
+    QAction* explorerToggleAction = panelRegistry_->toggleAction(QStringLiteral("explorer"));
+    QAction* previewToggleAction = panelRegistry_->toggleAction(QStringLiteral("preview"));
+    QAction* databaseToggleAction = panelRegistry_->toggleAction(QStringLiteral("database"));
+    QAction* terminalToggleAction = panelRegistry_->toggleAction(QStringLiteral("terminal"));
+    QAction* networkToggleAction = panelRegistry_->toggleAction(QStringLiteral("network"));
+    if (explorerToggleAction) {
+        viewMenu->addAction(explorerToggleAction);
+    }
+    if (previewToggleAction) {
+        viewMenu->addAction(previewToggleAction);
+    }
+    if (databaseToggleAction) {
+        viewMenu->addAction(databaseToggleAction);
+    }
+    if (terminalToggleAction) {
+        viewMenu->addAction(terminalToggleAction);
+    }
+    if (networkToggleAction) {
+        viewMenu->addAction(networkToggleAction);
+    }
+    viewMenu->addSeparator();
+
     QAction* splitToggleAction = viewMenu->addAction(tr("Toggle Split Editor"));
     QAction* devToolsToggleAction = viewMenu->addAction(tr("Toggle DevTools"));
-
-    explorerToggleAction->setCheckable(true);
-    previewToggleAction->setCheckable(true);
-    databaseToggleAction->setCheckable(true);
-    terminalToggleAction->setCheckable(true);
     splitToggleAction->setCheckable(true);
     devToolsToggleAction->setCheckable(true);
-
-    explorerToggleAction->setChecked(true);
-    previewToggleAction->setChecked(true);
-    databaseToggleAction->setChecked(true);
-    terminalToggleAction->setChecked(true);
     splitToggleAction->setChecked(editorArea_->isSplitEditorVisible());
-    devToolsToggleAction->setChecked(previewWidget_->isDevToolsVisible());
+    devToolsToggleAction->setChecked(previewWidget_ ? previewWidget_->isDevToolsVisible() : false);
 
     QAction* openDatabaseAction = toolsMenu->addAction(tr("Open Database"));
     QAction* runBuildAction = toolsMenu->addAction(tr("Run Build"));
@@ -160,7 +186,12 @@ void MainWindow::buildMenus() {
         if (folder.isEmpty()) {
             return;
         }
-        explorerWidget_->openFolder(folder);
+        if (auto* dock = panelRegistry_->dockWidget(QStringLiteral("explorer"))) {
+            dock->show();
+        }
+        if (auto* explorer = qobject_cast<FileExplorerWidget*>(panelRegistry_->ensurePanelWidget(QStringLiteral("explorer")))) {
+            explorer->openFolder(folder);
+        }
     });
 
     connect(openFileAction, &QAction::triggered, this, [this]() {
@@ -181,18 +212,13 @@ void MainWindow::buildMenus() {
     connect(copyAction, &QAction::triggered, editorArea_, &EditorAreaWidget::copy);
     connect(pasteAction, &QAction::triggered, editorArea_, &EditorAreaWidget::paste);
 
-    connect(explorerToggleAction, &QAction::toggled, explorerDock_, &QDockWidget::setVisible);
-    connect(previewToggleAction, &QAction::toggled, previewDock_, &QDockWidget::setVisible);
-    connect(databaseToggleAction, &QAction::toggled, databaseDock_, &QDockWidget::setVisible);
-    connect(terminalToggleAction, &QAction::toggled, terminalDock_, &QDockWidget::setVisible);
-
     connect(splitToggleAction, &QAction::toggled, editorArea_, &EditorAreaWidget::setSplitEditorVisible);
-    connect(devToolsToggleAction, &QAction::toggled, previewWidget_, &PreviewWidget::toggleDevTools);
-
-    connect(explorerDock_, &QDockWidget::visibilityChanged, explorerToggleAction, &QAction::setChecked);
-    connect(previewDock_, &QDockWidget::visibilityChanged, previewToggleAction, &QAction::setChecked);
-    connect(databaseDock_, &QDockWidget::visibilityChanged, databaseToggleAction, &QAction::setChecked);
-    connect(terminalDock_, &QDockWidget::visibilityChanged, terminalToggleAction, &QAction::setChecked);
+    connect(devToolsToggleAction, &QAction::toggled, this, [this](bool visible) {
+        auto* preview = qobject_cast<PreviewWidget*>(panelRegistry_->ensurePanelWidget(QStringLiteral("preview")));
+        if (preview) {
+            preview->toggleDevTools(visible);
+        }
+    });
 
     connect(openDatabaseAction, &QAction::triggered, this, [this]() {
         const QString path = QFileDialog::getOpenFileName(this,
@@ -202,20 +228,30 @@ void MainWindow::buildMenus() {
         if (path.isEmpty()) {
             return;
         }
-        databaseWidget_->openDatabase(path);
-        if (databaseManager_) {
-            databaseManager_->attachDatabase(path);
+        if (auto* dock = panelRegistry_->dockWidget(QStringLiteral("database"))) {
+            dock->show();
+        }
+        if (auto* database = qobject_cast<DatabaseWidget*>(panelRegistry_->ensurePanelWidget(QStringLiteral("database")))) {
+            database->openDatabase(path);
         }
     });
 
     connect(runBuildAction, &QAction::triggered, this, [this]() {
-        terminalDock_->show();
-        terminalWidget_->executeCommand(QStringLiteral("cmake --build build"));
+        if (auto* dock = panelRegistry_->dockWidget(QStringLiteral("terminal"))) {
+            dock->show();
+        }
+        if (auto* terminal = qobject_cast<TerminalWidget*>(panelRegistry_->ensurePanelWidget(QStringLiteral("terminal")))) {
+            terminal->executeCommand(QStringLiteral("cmake --build build"));
+        }
     });
 
     connect(startDevServerAction, &QAction::triggered, this, [this]() {
-        terminalDock_->show();
-        terminalWidget_->executeCommand(QStringLiteral("npm run dev"));
+        if (auto* dock = panelRegistry_->dockWidget(QStringLiteral("terminal"))) {
+            dock->show();
+        }
+        if (auto* terminal = qobject_cast<TerminalWidget*>(panelRegistry_->ensurePanelWidget(QStringLiteral("terminal")))) {
+            terminal->executeCommand(QStringLiteral("npm run dev"));
+        }
     });
 
     connect(aboutAction, &QAction::triggered, this, [this]() {
@@ -226,61 +262,105 @@ void MainWindow::buildMenus() {
 }
 
 void MainWindow::wireSignals() {
-    connect(explorerWidget_, &FileExplorerWidget::fileOpenRequested, editorArea_, &EditorAreaWidget::openFile);
-
-    connect(explorerWidget_, &FileExplorerWidget::workspaceChanged, this, [this](const QString& path) {
-        currentWorkspace_ = path;
-        if (workspaceManager_) {
-            workspaceManager_->openWorkspace(path);
-        }
-        updateWindowTitle();
-        statusBar()->showMessage(tr("Workspace opened: %1").arg(path), 4000);
+    connect(editorArea_, &EditorAreaWidget::statusMessage, this, [this](const QString& message) {
+        statusBar()->showMessage(message, 3000);
     });
 
-    connect(editorArea_, &EditorAreaWidget::currentFileChanged, this, [this](const QString& filePath, const QString& content, bool isHtml) {
-        updateWindowTitle();
-        if (isHtml) {
-            previewWidget_->previewHtmlContent(content, filePath);
-        }
-    });
+    connect(editorArea_, &EditorAreaWidget::currentFileChanged, this,
+            [this](const QString& filePath, const QString& content, bool isHtml) {
+                updateWindowTitle();
+                if (isHtml && previewWidget_) {
+                    previewWidget_->previewHtmlContent(content, filePath);
+                }
+            },
+            Qt::UniqueConnection);
 
-    connect(editorArea_, &EditorAreaWidget::documentContentChanged, this, [this](const QString& filePath, const QString& content, bool isHtml) {
-        if (isHtml) {
-            previewWidget_->previewHtmlContent(content, filePath);
-        }
-    });
-
-        connect(editorArea_, &EditorAreaWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 3000);
-                });
-
-        connect(previewWidget_, &PreviewWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 3000);
-                });
-
-        connect(databaseWidget_, &DatabaseWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 4000);
-                });
-
-        connect(terminalWidget_, &TerminalWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 3000);
-                });
-
-    connect(databaseWidget_, &DatabaseWidget::databaseOpened, this, [this](const QString& path) {
-        if (databaseManager_) {
-            databaseManager_->attachDatabase(path);
-        }
-    });
+    connect(editorArea_, &EditorAreaWidget::documentContentChanged, this,
+            [this](const QString& filePath, const QString& content, bool isHtml) {
+                if (isHtml && previewWidget_) {
+                    previewWidget_->previewHtmlContent(content, filePath);
+                }
+            },
+            Qt::UniqueConnection);
 
     if (workspaceManager_) {
         connect(workspaceManager_, &WorkspaceManager::workspaceOpened, this, [this](const QString& path) {
             currentWorkspace_ = path;
             updateWindowTitle();
         });
+    }
+}
+
+void MainWindow::handlePanelReady(const QString& id, QWidget* widget) {
+    if (id == QLatin1String("explorer")) {
+        explorerWidget_ = qobject_cast<FileExplorerWidget*>(widget);
+        if (!explorerWidget_) {
+            return;
+        }
+        connect(explorerWidget_, &FileExplorerWidget::fileOpenRequested, editorArea_, &EditorAreaWidget::openFile, Qt::UniqueConnection);
+        connect(explorerWidget_, &FileExplorerWidget::workspaceChanged, this, [this](const QString& path) {
+            currentWorkspace_ = path;
+            if (workspaceManager_) {
+                workspaceManager_->openWorkspace(path);
+            }
+            updateWindowTitle();
+            statusBar()->showMessage(tr("Workspace opened: %1").arg(path), 4000);
+        }, Qt::UniqueConnection);
+        if (!currentWorkspace_.isEmpty() && QFileInfo::exists(currentWorkspace_)) {
+            explorerWidget_->openFolder(currentWorkspace_);
+        }
+        return;
+    }
+
+    if (id == QLatin1String("preview")) {
+        previewWidget_ = qobject_cast<PreviewWidget*>(widget);
+        if (!previewWidget_) {
+            return;
+        }
+        connect(previewWidget_, &PreviewWidget::statusMessage, this, [this](const QString& message) {
+            statusBar()->showMessage(message, 3000);
+        }, Qt::UniqueConnection);
+        if (networkWidget_) {
+            previewWidget_->setNetworkWidget(networkWidget_);
+        }
+        return;
+    }
+
+    if (id == QLatin1String("database")) {
+        databaseWidget_ = qobject_cast<DatabaseWidget*>(widget);
+        if (!databaseWidget_) {
+            return;
+        }
+        connect(databaseWidget_, &DatabaseWidget::statusMessage, this, [this](const QString& message) {
+            statusBar()->showMessage(message, 4000);
+        }, Qt::UniqueConnection);
+        connect(databaseWidget_, &DatabaseWidget::databaseOpened, this, [this](const QString& path) {
+            if (databaseManager_) {
+                databaseManager_->attachDatabase(path);
+            }
+        }, Qt::UniqueConnection);
+        return;
+    }
+
+    if (id == QLatin1String("terminal")) {
+        terminalWidget_ = qobject_cast<TerminalWidget*>(widget);
+        if (!terminalWidget_) {
+            return;
+        }
+        connect(terminalWidget_, &TerminalWidget::statusMessage, this, [this](const QString& message) {
+            statusBar()->showMessage(message, 3000);
+        }, Qt::UniqueConnection);
+        return;
+    }
+
+    if (id == QLatin1String("network")) {
+        networkWidget_ = qobject_cast<NetworkWidget*>(widget);
+        if (!networkWidget_) {
+            return;
+        }
+        if (previewWidget_) {
+            previewWidget_->setNetworkWidget(networkWidget_);
+        }
     }
 }
 
@@ -295,17 +375,19 @@ void MainWindow::applyTheme() {
 
 void MainWindow::loadState() {
     restoreGeometry(settings_->value(QStringLiteral("window/geometry")).toByteArray());
-    restoreState(settings_->value(QStringLiteral("window/state")).toByteArray());
+    panelRegistry_->restoreState(settings_);
 
     currentWorkspace_ = settings_->value(QStringLiteral("workspace/root")).toString();
     if (!currentWorkspace_.isEmpty() && QFileInfo::exists(currentWorkspace_)) {
-        explorerWidget_->openFolder(currentWorkspace_);
+        if (auto* explorer = qobject_cast<FileExplorerWidget*>(panelRegistry_->ensurePanelWidget(QStringLiteral("explorer")))) {
+            explorer->openFolder(currentWorkspace_);
+        }
     }
 }
 
 void MainWindow::saveStateToSettings() {
     settings_->setValue(QStringLiteral("window/geometry"), saveGeometry());
-    settings_->setValue(QStringLiteral("window/state"), saveState());
+    panelRegistry_->saveState(settings_);
     settings_->setValue(QStringLiteral("workspace/root"), currentWorkspace_);
 }
 
