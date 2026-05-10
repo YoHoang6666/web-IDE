@@ -4,7 +4,6 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDockWidget>
-#include <QDebug>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -19,6 +18,7 @@
 #include "database/DatabaseManager.h"
 #include "editor/EditorHost.h"
 #include "preview/PreviewPane.h"
+#include "core/Logger.h"
 #include "widgets/DatabaseWidget.h"
 #include "widgets/EditorAreaWidget.h"
 #include "widgets/FileExplorerWidget.h"
@@ -289,7 +289,7 @@ void MainWindow::applyTheme() {
     if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qApp->setStyleSheet(QString::fromUtf8(stylesheet.readAll()));
     } else {
-        qWarning() << "Failed to load dark theme from resources";
+        Logger::global().warning(QStringLiteral("Failed to load dark theme from resources"), QStringLiteral("shell"));
     }
 }
 

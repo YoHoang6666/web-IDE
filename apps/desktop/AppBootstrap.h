@@ -30,6 +30,10 @@ public:
     int run(QApplication& app, const QStringList& arguments);
 
 private:
+    void configureLogging(const QStringList& arguments);
+    void logStartupDiagnostics(const QStringList& arguments) const;
+    void logBuildEnvironment() const;
+    void logRuntimeDiscovery() const;
     void wireCoreServices();
 
     std::unique_ptr<WorkspaceManager> workspaceManager_;

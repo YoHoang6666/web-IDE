@@ -1,6 +1,6 @@
 #include "DevToolsManager.h"
 
-#include <QDebug>
+#include "core/Logger.h"
 
 namespace webide {
 DevToolsManager::DevToolsManager(QObject* parent) : QObject(parent) {}
@@ -9,7 +9,7 @@ void DevToolsManager::bindPreviewPane(PreviewPane* previewPane) { previewPane_ =
 
 void DevToolsManager::openInspector() {
     if (previewPane_) {
-        qInfo() << "DevTools attached to active preview session";
+        Logger::global().info(QStringLiteral("DevTools attached to active preview session"), QStringLiteral("preview"));
     }
 }
 }  // namespace webide
