@@ -11,6 +11,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QProcessEnvironment>
 #include <QSettings>
 #include <QMainWindow>
 #include <QObject>
@@ -287,6 +288,12 @@ void MainWindow::wireSignals() {
         connect(workspaceManager_, &WorkspaceManager::workspaceOpened, this, [this](const QString& path) {
             currentWorkspace_ = path;
             updateWindowTitle();
+            if (terminalWidget_) {
+                terminalWidget_->setWorkingDirectory(path);
+                auto env = QProcessEnvironment::systemEnvironment();
+                env.insert(QStringLiteral("WEBIDE_WORKSPACE"), path);
+                terminalWidget_->setEnvironment(env);
+            }
         });
     }
 }
@@ -350,6 +357,12 @@ void MainWindow::handlePanelReady(const QString& id, QWidget* widget) {
         connect(terminalWidget_, &TerminalWidget::statusMessage, this, [this](const QString& message) {
             statusBar()->showMessage(message, 3000);
         }, Qt::UniqueConnection);
+        if (!currentWorkspace_.isEmpty()) {
+            terminalWidget_->setWorkingDirectory(currentWorkspace_);
+            auto env = QProcessEnvironment::systemEnvironment();
+            env.insert(QStringLiteral("WEBIDE_WORKSPACE"), currentWorkspace_);
+            terminalWidget_->setEnvironment(env);
+        }
         return;
     }
 

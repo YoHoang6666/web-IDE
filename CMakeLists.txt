@@ -49,6 +49,26 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
     qt_standard_project_setup()
   endif()
 
+  add_library(webide_runtime STATIC
+    src/runtime/LocalApiBridge.cpp
+    src/runtime/LocalApiBridge.h
+    src/runtime/ScriptExecutionContext.cpp
+    src/runtime/ScriptExecutionContext.h
+    src/runtime/SecurityPolicy.cpp
+    src/runtime/SecurityPolicy.h
+    src/runtime/ProcessManager.cpp
+    src/runtime/ProcessManager.h
+    src/runtime/RuntimeSession.cpp
+    src/runtime/RuntimeSession.h
+    src/runtime/ShellDetector.cpp
+    src/runtime/ShellDetector.h
+    src/runtime/TerminalSession.cpp
+    src/runtime/TerminalSession.h
+    src/runtime/AnsiTextFormatter.h
+  )
+  target_link_libraries(webide_runtime PUBLIC webide_core Qt6::Core)
+  webide_set_common_warnings(webide_runtime)
+
   add_library(webide_shell STATIC
     src/shell/MainWindow.cpp
     src/shell/MainWindow.h
@@ -73,7 +93,7 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
     src/shell/widgets/NetworkWidget.cpp
     src/shell/widgets/NetworkWidget.h
   )
-  target_link_libraries(webide_shell PUBLIC webide_core Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql Qt6::WebEngineWidgets Qt6::WebEngineCore)
+  target_link_libraries(webide_shell PUBLIC webide_core webide_runtime Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql Qt6::WebEngineWidgets Qt6::WebEngineCore)
   webide_set_common_warnings(webide_shell)
 
   add_library(webide_workspace STATIC
@@ -140,17 +160,6 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
   )
   target_link_libraries(webide_database PUBLIC webide_core Qt6::Core Qt6::Sql Qt6::Widgets)
   webide_set_common_warnings(webide_database)
-
-  add_library(webide_runtime STATIC
-    src/runtime/LocalApiBridge.cpp
-    src/runtime/LocalApiBridge.h
-    src/runtime/ScriptExecutionContext.cpp
-    src/runtime/ScriptExecutionContext.h
-    src/runtime/SecurityPolicy.cpp
-    src/runtime/SecurityPolicy.h
-  )
-  target_link_libraries(webide_runtime PUBLIC webide_core Qt6::Core)
-  webide_set_common_warnings(webide_runtime)
 
   add_library(webide_sync STATIC
     src/sync/SyncCoordinator.cpp
