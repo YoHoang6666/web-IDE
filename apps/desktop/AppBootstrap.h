@@ -22,6 +22,7 @@ class SQLiteConnectionPool;
 class QueryEngine;
 class DatabaseWatcherService;
 class SyncCoordinator;
+class RuntimeManager;
 
 class AppBootstrap {
 public:
@@ -47,6 +48,7 @@ private:
     std::unique_ptr<QueryEngine> queryEngine_;
     std::unique_ptr<DatabaseWatcherService> databaseWatcherService_;
     std::unique_ptr<SyncCoordinator> syncCoordinator_;
+    std::unique_ptr<RuntimeManager> runtimeManager_;
     std::unique_ptr<MainWindow> mainWindow_;
 };
 }  // namespace webide

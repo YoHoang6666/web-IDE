@@ -14,6 +14,7 @@
 #include "src/preview/LiveReloadController.h"
 #include "src/preview/PreviewPane.h"
 #include "src/preview/PreviewSessionManager.h"
+#include "src/runtime/RuntimeManager.h"
 #include "src/shell/MainWindow.h"
 #include "src/sync/SyncCoordinator.h"
 #include "src/workspace/FileSystemService.h"
@@ -42,10 +43,15 @@ int AppBootstrap::run(QApplication& app, const QStringList& arguments) {
     queryEngine_ = std::make_unique<QueryEngine>();
     databaseWatcherService_ = std::make_unique<DatabaseWatcherService>();
     syncCoordinator_ = std::make_unique<SyncCoordinator>();
+    runtimeManager_ = std::make_unique<RuntimeManager>();
 
     wireCoreServices();
 
-    mainWindow_ = std::make_unique<MainWindow>(workspaceManager_.get(), editorHost_.get(), previewPane_.get(), databaseManager_.get());
+    mainWindow_ = std::make_unique<MainWindow>(workspaceManager_.get(),
+                                               editorHost_.get(),
+                                               previewPane_.get(),
+                                               databaseManager_.get(),
+                                               runtimeManager_.get());
     mainWindow_->show();
     return app.exec();
 }
