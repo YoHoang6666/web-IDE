@@ -2,10 +2,13 @@
 
 #include <QDesktopServices>
 #include <QListWidget>
+#include <QMetaObject>
 #include <QPlainTextEdit>
+#include <QProcess>
 #include <QSplitter>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <memory>
 
 #include "runtime/LocalServerManager.h"
 #include "runtime/ProcessManager.h"
@@ -71,12 +74,13 @@ void RuntimePanel::wireSignals() {
         refreshProcessList();
     });
 
-    connect(runtimeManager_->processManager(), &ProcessManager::processOutput, this, [this](const QString& processId, const QString& text, bool isError) {
-        if (text.isEmpty()) {
+    connect(runtimeManager_->processManager(), &ProcessManager::processOutput, this, [this](const QString& processId, const QString& outputText, bool isError) {
+        if (outputText.isEmpty()) {
             return;
         }
-        logsOutput_->appendPlainText(QStringLiteral("[%1] %2%3")
-                                         .arg(processId, isError ? QStringLiteral("[err] ") : QString(), text.trimmed()));
+        const QString logLine = QStringLiteral("%1\t%2\t%3")
+                                    .arg(processId, isError ? QStringLiteral("stderr") : QStringLiteral("stdout"), outputText.trimmed());
+        logsOutput_->appendPlainText(logLine);
     });
 
     connect(serverControl_, &ServerControlWidget::startRequested, this, [this](const QString& runtimeId, const QString& command, int port) {
@@ -106,7 +110,32 @@ void RuntimePanel::wireSignals() {
     connect(serverControl_, &ServerControlWidget::restartRequested, this, [this]() {
         const QString processId = processMonitor_->selectedProcessId().isEmpty() ? activeProcessId_ : processMonitor_->selectedProcessId();
         if (!processId.isEmpty()) {
-            runtimeManager_->processManager()->killProcess(processId);
+            const QList<ManagedProcess> processes = runtimeManager_->processManager()->processes();
+            for (const ManagedProcess& process : processes) {
+                if (process.id != processId) {
+                    continue;
+                }
+
+                auto restartConnection = std::make_shared<QMetaObject::Connection>();
+                *restartConnection = connect(runtimeManager_->processManager(),
+                                             &ProcessManager::processFinished,
+                                             this,
+                                             [this, restartConnection, process, processId](const QString& finishedId, int, QProcess::ExitStatus) {
+                                                 if (finishedId != processId) {
+                                                     return;
+                                                 }
+                                                 disconnect(*restartConnection);
+                                                 activeProcessId_ = runtimeManager_->processManager()->startProcess(process.runtimeId,
+                                                                                                                    process.commandLabel,
+                                                                                                                    process.program,
+                                                                                                                    process.arguments,
+                                                                                                                    process.workingDirectory,
+                                                                                                                    process.port);
+                                             });
+
+                runtimeManager_->processManager()->stopProcess(processId);
+                break;
+            }
         }
     });
 

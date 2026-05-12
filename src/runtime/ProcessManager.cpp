@@ -1,14 +1,13 @@
 #include "ProcessManager.h"
 
-#include <QDateTime>
 #include <atomic>
 
 namespace webide {
 ProcessManager::ProcessManager(QObject* parent) : QObject(parent) {}
 
 QString ProcessManager::nextId() {
-    static std::atomic<int> counter{0};
-    return QStringLiteral("proc-%1-%2").arg(QDateTime::currentMSecsSinceEpoch()).arg(++counter);
+    static std::atomic<unsigned long long> counter{0};
+    return QStringLiteral("proc-%1").arg(++counter);
 }
 
 QString ProcessManager::startProcess(const QString& runtimeId,
@@ -29,7 +28,7 @@ QString ProcessManager::startProcess(const QString& runtimeId,
     entry.meta.arguments = arguments;
     entry.meta.workingDirectory = workingDirectory;
     entry.meta.port = port;
-    entry.meta.state = QProcess::Starting;
+    entry.meta.state = QProcess::NotRunning;
     entry.process = new QProcess(this);
 
     if (!workingDirectory.isEmpty()) {
@@ -76,6 +75,7 @@ QString ProcessManager::startProcess(const QString& runtimeId,
     processes_.insert(processId, entry);
     auto it = processes_.find(processId);
     it->process->start(program, arguments);
+    it->meta.state = it->process->state();
     emitUpdate(*it);
     return processId;
 }

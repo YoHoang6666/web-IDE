@@ -37,36 +37,19 @@
 namespace webide {
 namespace {
 constexpr auto kThemePath = ":/webide/themes/dark.qss";
+// Width optimized for icon-only activity buttons and active indicator.
+constexpr int kActivitySidebarWidth = 48;
+constexpr int kMinimumSplitterWidth = 1;
 
 int activityToInt(ActivityId activity) {
     return static_cast<int>(activity);
 }
 
 ActivityId intToActivity(int value) {
-    switch (value) {
-        case 0:
-            return ActivityId::Explorer;
-        case 1:
-            return ActivityId::Search;
-        case 2:
-            return ActivityId::Git;
-        case 3:
-            return ActivityId::Database;
-        case 4:
-            return ActivityId::Runtime;
-        case 5:
-            return ActivityId::Preview;
-        case 6:
-            return ActivityId::Network;
-        case 7:
-            return ActivityId::DevTools;
-        case 8:
-            return ActivityId::Extensions;
-        case 9:
-            return ActivityId::Settings;
-        default:
-            return ActivityId::Explorer;
+    if (value < activityToInt(ActivityId::Explorer) || value > activityToInt(ActivityId::Settings)) {
+        return ActivityId::Explorer;
     }
+    return static_cast<ActivityId>(value);
 }
 
 QWidget* createSimplePanel(const QString& text, QWidget* parent = nullptr) {
@@ -138,7 +121,9 @@ void MainWindow::buildSidebars() {
     sidebarSplitter_->setStretchFactor(0, 0);
     sidebarSplitter_->setStretchFactor(1, 0);
     sidebarSplitter_->setStretchFactor(2, 1);
-    sidebarSplitter_->setSizes({48, 320, 1200});
+    activityPanelHost_->setMinimumWidth(260);
+    activityPanelHost_->setMaximumWidth(520);
+    sidebarSplitter_->setSizes({kActivitySidebarWidth, 320, 900});
     centralLayout->addWidget(sidebarSplitter_);
 
     const QList<ActivityDefinition> activities = {
@@ -254,7 +239,6 @@ void MainWindow::buildMenus() {
             return;
         }
         explorerWidget_->openFolder(folder);
-        currentWorkspace_ = folder;
     });
 
     connect(openFileAction, &QAction::triggered, this, [this]() {
@@ -313,7 +297,12 @@ void MainWindow::buildMenus() {
     connect(aboutAction, &QAction::triggered, this, [this]() {
         QMessageBox::about(this,
                            tr("About web-IDE"),
-                           tr("web-IDE\nA Qt6 desktop IDE shell with dual sidebar, editor, live preview, database tools, runtime manager, terminal, and network inspector."));
+                           tr("web-IDE\n\n"
+                              "Qt6 desktop IDE shell with:\n"
+                              "• Dual sidebar navigation\n"
+                              "• Editor and live preview\n"
+                              "• Database and runtime tools\n"
+                              "• Integrated terminal and network inspector"));
     });
 }
 
@@ -393,7 +382,9 @@ void MainWindow::restoreSidebarState() {
     const int width = settings_->value(QStringLiteral("sidebar/width"), 320).toInt();
     setActivityVisible(activeActivity_, isInnerSidebarVisible_);
     if (sidebarSplitter_) {
-        const QList<int> sizes = {48, width, qMax(1, width * 2)};
+        const int totalWidth = qMax(kMinimumSplitterWidth, width());
+        const int editorWidth = qMax(kMinimumSplitterWidth, totalWidth - kActivitySidebarWidth - width);
+        const QList<int> sizes = {kActivitySidebarWidth, width, editorWidth};
         sidebarSplitter_->setSizes(sizes);
     }
 }
@@ -462,4 +453,3 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     QMainWindow::closeEvent(event);
 }
 }  // namespace webide
-

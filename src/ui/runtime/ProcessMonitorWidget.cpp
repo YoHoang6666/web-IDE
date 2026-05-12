@@ -5,6 +5,21 @@
 #include <QVBoxLayout>
 
 namespace webide {
+namespace {
+QString processStateLabel(QProcess::ProcessState state) {
+    switch (state) {
+        case QProcess::NotRunning:
+            return QObject::tr("Not Running");
+        case QProcess::Starting:
+            return QObject::tr("Starting");
+        case QProcess::Running:
+            return QObject::tr("Running");
+        default:
+            return QObject::tr("Unknown");
+    }
+}
+}  // namespace
+
 ProcessMonitorWidget::ProcessMonitorWidget(QWidget* parent)
     : QWidget(parent), table_(new QTableWidget(this)) {
     auto* layout = new QVBoxLayout(this);
@@ -28,8 +43,11 @@ void ProcessMonitorWidget::setProcesses(const QList<ManagedProcess>& processes) 
         table_->setItem(row, 1, new QTableWidgetItem(process.runtimeId));
         table_->setItem(row, 2, new QTableWidgetItem(process.commandLabel));
         table_->setItem(row, 3, new QTableWidgetItem(process.port == 0 ? QStringLiteral("-") : QString::number(process.port)));
-        table_->setItem(row, 4, new QTableWidgetItem(QString::number(static_cast<int>(process.state))));
-        table_->setItem(row, 5, new QTableWidgetItem(QString::number(process.exitCode)));
+        table_->setItem(row, 4, new QTableWidgetItem(processStateLabel(process.state)));
+        table_->setItem(row,
+                        5,
+                        new QTableWidgetItem(process.state == QProcess::NotRunning ? QString::number(process.exitCode)
+                                                                                    : QStringLiteral("-")));
     }
 }
 
@@ -42,4 +60,3 @@ QString ProcessMonitorWidget::selectedProcessId() const {
     return item ? item->text() : QString();
 }
 }  // namespace webide
-

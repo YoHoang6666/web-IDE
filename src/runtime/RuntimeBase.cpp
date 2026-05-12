@@ -5,6 +5,11 @@
 #include <utility>
 
 namespace webide {
+namespace {
+constexpr int kVersionCheckTimeoutMs = 2000;
+constexpr int kKillWaitTimeoutMs = 300;
+}  // namespace
+
 RuntimeBase::RuntimeBase(QString id, QString displayName, QObject* parent)
     : QObject(parent), id_(std::move(id)), displayName_(std::move(displayName)) {
     environment_.id = id_;
@@ -56,9 +61,9 @@ QString RuntimeBase::readFirstLineFromCommand(const QString& executablePath, con
 
     QProcess process;
     process.start(executablePath, {command});
-    if (!process.waitForFinished(2000)) {
+    if (!process.waitForFinished(kVersionCheckTimeoutMs)) {
         process.kill();
-        process.waitForFinished(300);
+        process.waitForFinished(kKillWaitTimeoutMs);
         return {};
     }
 
