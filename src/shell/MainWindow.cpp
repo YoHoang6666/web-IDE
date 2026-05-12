@@ -4,21 +4,28 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDockWidget>
-#include <QDebug>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QStatusBar>
+#include <QHBoxLayout>
+#include <QKeySequence>
+#include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QSettings>
-#include <QMainWindow>
-#include <QObject>
+#include <QShortcut>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QVBoxLayout>
 
 #include "database/DatabaseManager.h"
 #include "editor/EditorHost.h"
 #include "preview/PreviewPane.h"
+#include "runtime/RuntimeManager.h"
+#include "sidebar/ActivityPanelHost.h"
+#include "sidebar/ActivitySidebar.h"
+#include "ui/runtime/RuntimePanel.h"
 #include "widgets/DatabaseWidget.h"
 #include "widgets/EditorAreaWidget.h"
 #include "widgets/FileExplorerWidget.h"
@@ -30,27 +37,56 @@
 namespace webide {
 namespace {
 constexpr auto kThemePath = ":/webide/themes/dark.qss";
+// Width optimized for icon-only activity buttons and active indicator.
+constexpr int kActivitySidebarWidth = 48;
+constexpr int kMinimumSplitterWidth = 1;
+
+int activityToInt(ActivityId activity) {
+    return static_cast<int>(activity);
 }
+
+ActivityId intToActivity(int value) {
+    if (value < activityToInt(ActivityId::Explorer) || value > activityToInt(ActivityId::Settings)) {
+        return ActivityId::Explorer;
+    }
+    return static_cast<ActivityId>(value);
+}
+
+QWidget* createSimplePanel(const QString& text, QWidget* parent = nullptr) {
+    auto* panel = new QWidget(parent);
+    auto* layout = new QVBoxLayout(panel);
+    layout->setContentsMargins(8, 8, 8, 8);
+    auto* label = new QLabel(text, panel);
+    label->setWordWrap(true);
+    layout->addWidget(label);
+    layout->addStretch();
+    return panel;
+}
+}  // namespace
 
 MainWindow::MainWindow(WorkspaceManager* workspaceManager,
                        EditorHost* editorHost,
                        PreviewPane* previewPane,
                        DatabaseManager* databaseManager,
+                       RuntimeManager* runtimeManager,
                        QWidget* parent)
     : QMainWindow(parent),
       workspaceManager_(workspaceManager),
       databaseManager_(databaseManager),
+      runtimeManager_(runtimeManager),
       explorerWidget_(new FileExplorerWidget(this)),
       editorArea_(new EditorAreaWidget(this)),
       previewWidget_(new PreviewWidget(this)),
       databaseWidget_(new DatabaseWidget(this)),
       terminalWidget_(new TerminalWidget(this)),
       networkWidget_(new NetworkWidget(this)),
-      explorerDock_(new QDockWidget(tr("Explorer"), this)),
+      runtimePanel_(new RuntimePanel(runtimeManager_, this)),
+      activitySidebar_(new ActivitySidebar(this)),
+      activityPanelHost_(new ActivityPanelHost(this)),
+      centralShell_(new QWidget(this)),
+      sidebarSplitter_(new QSplitter(Qt::Horizontal, centralShell_)),
       previewDock_(new QDockWidget(tr("Preview"), this)),
-      databaseDock_(new QDockWidget(tr("Database"), this)),
       terminalDock_(new QDockWidget(tr("Terminal"), this)),
-      networkDock_(new QDockWidget(tr("Network"), this)),
       settings_(new QSettings(QStringLiteral("web-IDE"), QStringLiteral("web-IDE"), this)) {
     Q_UNUSED(editorHost);
     Q_UNUSED(previewPane);
@@ -59,36 +95,81 @@ MainWindow::MainWindow(WorkspaceManager* workspaceManager,
 
 void MainWindow::buildShell() {
     resize(1700, 1000);
-    setCentralWidget(editorArea_);
+    setCentralWidget(centralShell_);
 
     previewWidget_->setNetworkWidget(networkWidget_);
 
+    buildSidebars();
     buildDocks();
     buildMenus();
     wireSignals();
     applyTheme();
     loadState();
+    registerActivityShortcuts();
     updateWindowTitle();
     statusBar()->showMessage(tr("web-IDE ready"));
 }
 
-void MainWindow::buildDocks() {
-    explorerDock_->setWidget(explorerWidget_);
-    previewDock_->setWidget(previewWidget_);
-    databaseDock_->setWidget(databaseWidget_);
-    terminalDock_->setWidget(terminalWidget_);
-    networkDock_->setWidget(networkWidget_);
+void MainWindow::buildSidebars() {
+    auto* centralLayout = new QHBoxLayout(centralShell_);
+    centralLayout->setContentsMargins(0, 0, 0, 0);
 
-    addDockWidget(Qt::LeftDockWidgetArea, explorerDock_);
+    sidebarSplitter_->setChildrenCollapsible(false);
+    sidebarSplitter_->addWidget(activitySidebar_);
+    sidebarSplitter_->addWidget(activityPanelHost_);
+    sidebarSplitter_->addWidget(editorArea_);
+    sidebarSplitter_->setStretchFactor(0, 0);
+    sidebarSplitter_->setStretchFactor(1, 0);
+    sidebarSplitter_->setStretchFactor(2, 1);
+    activityPanelHost_->setMinimumWidth(260);
+    activityPanelHost_->setMaximumWidth(520);
+    sidebarSplitter_->setSizes({kActivitySidebarWidth, 320, 900});
+    centralLayout->addWidget(sidebarSplitter_);
+
+    const QList<ActivityDefinition> activities = {
+        {ActivityId::Explorer, QStringLiteral("E"), tr("Explorer"), QStringLiteral("Ctrl+1")},
+        {ActivityId::Search, QStringLiteral("S"), tr("Search"), QStringLiteral("Ctrl+2")},
+        {ActivityId::Git, QStringLiteral("G"), tr("Git"), QStringLiteral("Ctrl+3")},
+        {ActivityId::Database, QStringLiteral("D"), tr("Database"), QStringLiteral("Ctrl+4")},
+        {ActivityId::Runtime, QStringLiteral("R"), tr("Runtime"), QStringLiteral("Ctrl+5")},
+        {ActivityId::Preview, QStringLiteral("P"), tr("Preview"), QStringLiteral("Ctrl+6")},
+        {ActivityId::Network, QStringLiteral("N"), tr("Network"), QStringLiteral("Ctrl+7")},
+        {ActivityId::DevTools, QStringLiteral("T"), tr("DevTools"), QStringLiteral("Ctrl+8")},
+        {ActivityId::Extensions, QStringLiteral("X"), tr("Extensions"), QStringLiteral("Ctrl+9")},
+        {ActivityId::Settings, QStringLiteral("⚙"), tr("Settings"), QStringLiteral("Ctrl+0")},
+    };
+    activitySidebar_->setActivities(activities);
+
+    activityPanelHost_->registerPanel(ActivityId::Explorer, tr("Explorer"), explorerWidget_);
+    activityPanelHost_->registerPanel(ActivityId::Search, tr("Search"), createSimplePanel(tr("Workspace search panel")));
+    activityPanelHost_->registerPanel(ActivityId::Git, tr("Git"), createSimplePanel(tr("Source control panel")));
+    activityPanelHost_->registerPanel(ActivityId::Database, tr("Database"), databaseWidget_);
+    activityPanelHost_->registerPanel(ActivityId::Runtime, tr("Runtime"), runtimePanel_);
+    activityPanelHost_->registerPanel(ActivityId::Preview, tr("Preview"), createSimplePanel(tr("Use the right Preview dock for browser output")));
+    activityPanelHost_->registerPanel(ActivityId::Network, tr("Network"), networkWidget_);
+    activityPanelHost_->registerPanel(ActivityId::DevTools, tr("DevTools"), createSimplePanel(tr("Use Preview > DevTools to inspect elements")));
+    activityPanelHost_->registerPanel(ActivityId::Extensions, tr("Extensions"), createSimplePanel(tr("Extensions manager is planned for a later module")));
+    activityPanelHost_->registerPanel(ActivityId::Settings, tr("Settings"), createSimplePanel(tr("Global settings panel")));
+
+    connect(activitySidebar_, &ActivitySidebar::activityTriggered, this, [this](ActivityId activity) {
+        setActivityVisible(activity, true);
+    });
+    connect(activitySidebar_, &ActivitySidebar::collapseRequested, this, [this]() {
+        setActivityVisible(activeActivity_, !isInnerSidebarVisible_);
+    });
+    connect(activityPanelHost_, &ActivityPanelHost::collapseRequested, this, [this]() {
+        setActivityVisible(activeActivity_, false);
+    });
+
+    setActivityVisible(ActivityId::Explorer, true);
+}
+
+void MainWindow::buildDocks() {
+    previewDock_->setWidget(previewWidget_);
+    terminalDock_->setWidget(terminalWidget_);
+
     addDockWidget(Qt::RightDockWidgetArea, previewDock_);
     addDockWidget(Qt::BottomDockWidgetArea, terminalDock_);
-    addDockWidget(Qt::BottomDockWidgetArea, databaseDock_);
-    addDockWidget(Qt::BottomDockWidgetArea, networkDock_);
-
-    tabifyDockWidget(terminalDock_, databaseDock_);
-    tabifyDockWidget(databaseDock_, networkDock_);
-
-    terminalDock_->raise();
 }
 
 void MainWindow::buildMenus() {
@@ -124,23 +205,20 @@ void MainWindow::buildMenus() {
     copyAction->setShortcut(QKeySequence::Copy);
     pasteAction->setShortcut(QKeySequence::Paste);
 
-    QAction* explorerToggleAction = viewMenu->addAction(tr("Toggle Explorer"));
+    QAction* sidebarToggleAction = viewMenu->addAction(tr("Toggle Left Sidebar"));
     QAction* previewToggleAction = viewMenu->addAction(tr("Toggle Preview"));
-    QAction* databaseToggleAction = viewMenu->addAction(tr("Toggle Database"));
     QAction* terminalToggleAction = viewMenu->addAction(tr("Toggle Terminal"));
     QAction* splitToggleAction = viewMenu->addAction(tr("Toggle Split Editor"));
     QAction* devToolsToggleAction = viewMenu->addAction(tr("Toggle DevTools"));
 
-    explorerToggleAction->setCheckable(true);
+    sidebarToggleAction->setCheckable(true);
     previewToggleAction->setCheckable(true);
-    databaseToggleAction->setCheckable(true);
     terminalToggleAction->setCheckable(true);
     splitToggleAction->setCheckable(true);
     devToolsToggleAction->setCheckable(true);
 
-    explorerToggleAction->setChecked(true);
+    sidebarToggleAction->setChecked(true);
     previewToggleAction->setChecked(true);
-    databaseToggleAction->setChecked(true);
     terminalToggleAction->setChecked(true);
     splitToggleAction->setChecked(editorArea_->isSplitEditorVisible());
     devToolsToggleAction->setChecked(previewWidget_->isDevToolsVisible());
@@ -181,17 +259,14 @@ void MainWindow::buildMenus() {
     connect(copyAction, &QAction::triggered, editorArea_, &EditorAreaWidget::copy);
     connect(pasteAction, &QAction::triggered, editorArea_, &EditorAreaWidget::paste);
 
-    connect(explorerToggleAction, &QAction::toggled, explorerDock_, &QDockWidget::setVisible);
+    connect(sidebarToggleAction, &QAction::toggled, this, [this](bool visible) { setActivityVisible(activeActivity_, visible); });
     connect(previewToggleAction, &QAction::toggled, previewDock_, &QDockWidget::setVisible);
-    connect(databaseToggleAction, &QAction::toggled, databaseDock_, &QDockWidget::setVisible);
     connect(terminalToggleAction, &QAction::toggled, terminalDock_, &QDockWidget::setVisible);
 
     connect(splitToggleAction, &QAction::toggled, editorArea_, &EditorAreaWidget::setSplitEditorVisible);
     connect(devToolsToggleAction, &QAction::toggled, previewWidget_, &PreviewWidget::toggleDevTools);
 
-    connect(explorerDock_, &QDockWidget::visibilityChanged, explorerToggleAction, &QAction::setChecked);
     connect(previewDock_, &QDockWidget::visibilityChanged, previewToggleAction, &QAction::setChecked);
-    connect(databaseDock_, &QDockWidget::visibilityChanged, databaseToggleAction, &QAction::setChecked);
     connect(terminalDock_, &QDockWidget::visibilityChanged, terminalToggleAction, &QAction::setChecked);
 
     connect(openDatabaseAction, &QAction::triggered, this, [this]() {
@@ -203,6 +278,7 @@ void MainWindow::buildMenus() {
             return;
         }
         databaseWidget_->openDatabase(path);
+        setActivityVisible(ActivityId::Database, true);
         if (databaseManager_) {
             databaseManager_->attachDatabase(path);
         }
@@ -221,7 +297,12 @@ void MainWindow::buildMenus() {
     connect(aboutAction, &QAction::triggered, this, [this]() {
         QMessageBox::about(this,
                            tr("About web-IDE"),
-                           tr("web-IDE\nA Qt6 desktop IDE shell with explorer, editor, live preview, database tools, terminal, and network inspector."));
+                           tr("web-IDE\n\n"
+                              "Qt6 desktop IDE shell with:\n"
+                              "• Dual sidebar navigation\n"
+                              "• Editor and live preview\n"
+                              "• Database and runtime tools\n"
+                              "• Integrated terminal and network inspector"));
     });
 }
 
@@ -250,25 +331,11 @@ void MainWindow::wireSignals() {
         }
     });
 
-        connect(editorArea_, &EditorAreaWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 3000);
-                });
-
-        connect(previewWidget_, &PreviewWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 3000);
-                });
-
-        connect(databaseWidget_, &DatabaseWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 4000);
-                });
-
-        connect(terminalWidget_, &TerminalWidget::statusMessage, this,
-                [this](const QString& message) {
-                    statusBar()->showMessage(message, 3000);
-                });
+    connect(editorArea_, &EditorAreaWidget::statusMessage, this, [this](const QString& message) { statusBar()->showMessage(message, 3000); });
+    connect(previewWidget_, &PreviewWidget::statusMessage, this, [this](const QString& message) { statusBar()->showMessage(message, 3000); });
+    connect(databaseWidget_, &DatabaseWidget::statusMessage, this, [this](const QString& message) { statusBar()->showMessage(message, 4000); });
+    connect(terminalWidget_, &TerminalWidget::statusMessage, this, [this](const QString& message) { statusBar()->showMessage(message, 3000); });
+    connect(runtimePanel_, &RuntimePanel::statusMessage, this, [this](const QString& message) { statusBar()->showMessage(message, 3000); });
 
     connect(databaseWidget_, &DatabaseWidget::databaseOpened, this, [this](const QString& path) {
         if (databaseManager_) {
@@ -288,8 +355,6 @@ void MainWindow::applyTheme() {
     QFile stylesheet(QString::fromLatin1(kThemePath));
     if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qApp->setStyleSheet(QString::fromUtf8(stylesheet.readAll()));
-    } else {
-        qWarning() << "Failed to load dark theme from resources";
     }
 }
 
@@ -301,12 +366,76 @@ void MainWindow::loadState() {
     if (!currentWorkspace_.isEmpty() && QFileInfo::exists(currentWorkspace_)) {
         explorerWidget_->openFolder(currentWorkspace_);
     }
+    restoreSidebarState();
 }
 
 void MainWindow::saveStateToSettings() {
     settings_->setValue(QStringLiteral("window/geometry"), saveGeometry());
     settings_->setValue(QStringLiteral("window/state"), saveState());
     settings_->setValue(QStringLiteral("workspace/root"), currentWorkspace_);
+    persistSidebarState();
+}
+
+void MainWindow::restoreSidebarState() {
+    activeActivity_ = intToActivity(settings_->value(QStringLiteral("sidebar/activity"), activityToInt(ActivityId::Explorer)).toInt());
+    isInnerSidebarVisible_ = settings_->value(QStringLiteral("sidebar/visible"), true).toBool();
+    const int width = settings_->value(QStringLiteral("sidebar/width"), 320).toInt();
+    setActivityVisible(activeActivity_, isInnerSidebarVisible_);
+    if (sidebarSplitter_) {
+        const int totalWidth = qMax(kMinimumSplitterWidth, width());
+        const int editorWidth = qMax(kMinimumSplitterWidth, totalWidth - kActivitySidebarWidth - width);
+        const QList<int> sizes = {kActivitySidebarWidth, width, editorWidth};
+        sidebarSplitter_->setSizes(sizes);
+    }
+}
+
+void MainWindow::persistSidebarState() {
+    settings_->setValue(QStringLiteral("sidebar/activity"), activityToInt(activeActivity_));
+    settings_->setValue(QStringLiteral("sidebar/visible"), isInnerSidebarVisible_);
+    if (sidebarSplitter_) {
+        const QList<int> sizes = sidebarSplitter_->sizes();
+        if (sizes.size() > 1) {
+            settings_->setValue(QStringLiteral("sidebar/width"), sizes.at(1));
+        }
+    }
+}
+
+void MainWindow::setActivityVisible(ActivityId activity, bool visible) {
+    activeActivity_ = activity;
+    isInnerSidebarVisible_ = visible;
+    activitySidebar_->setActiveActivity(activity);
+    activityPanelHost_->setCurrentActivity(activity);
+    activityPanelHost_->setVisible(visible);
+
+    if (activity == ActivityId::Preview) {
+        previewDock_->show();
+    }
+    if (activity == ActivityId::DevTools) {
+        previewDock_->show();
+        previewWidget_->toggleDevTools(true);
+    }
+}
+
+void MainWindow::registerActivityShortcuts() {
+    const QList<QPair<QKeySequence, ActivityId>> mappings = {
+        {QKeySequence(QStringLiteral("Ctrl+1")), ActivityId::Explorer},
+        {QKeySequence(QStringLiteral("Ctrl+2")), ActivityId::Search},
+        {QKeySequence(QStringLiteral("Ctrl+3")), ActivityId::Git},
+        {QKeySequence(QStringLiteral("Ctrl+4")), ActivityId::Database},
+        {QKeySequence(QStringLiteral("Ctrl+5")), ActivityId::Runtime},
+        {QKeySequence(QStringLiteral("Ctrl+6")), ActivityId::Preview},
+        {QKeySequence(QStringLiteral("Ctrl+7")), ActivityId::Network},
+        {QKeySequence(QStringLiteral("Ctrl+8")), ActivityId::DevTools},
+        {QKeySequence(QStringLiteral("Ctrl+9")), ActivityId::Extensions},
+        {QKeySequence(QStringLiteral("Ctrl+0")), ActivityId::Settings},
+    };
+
+    for (const auto& mapping : mappings) {
+        auto* shortcut = new QShortcut(mapping.first, this);
+        connect(shortcut, &QShortcut::activated, this, [this, mapping]() {
+            setActivityVisible(mapping.second, true);
+        });
+    }
 }
 
 void MainWindow::updateWindowTitle() {

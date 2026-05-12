@@ -1,4 +1,5 @@
 build/
+build-desktop/
 out/
 .vs/
 .idea/

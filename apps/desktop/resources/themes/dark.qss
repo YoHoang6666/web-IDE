@@ -143,3 +143,33 @@ QStatusBar {
     background-color: #007acc;
     color: #ffffff;
 }
+
+#activitySidebar {
+    background-color: #252526;
+    border-right: 1px solid #2d2d30;
+}
+
+#activityPanelHost {
+    background-color: #1f1f1f;
+    border-right: 1px solid #2d2d30;
+}
+
+#activityPanelHeader {
+    background-color: #252526;
+    border-bottom: 1px solid #2d2d30;
+}
+
+#activityButton {
+    border-radius: 4px;
+    padding: 6px 4px;
+    min-width: 32px;
+}
+
+#activityButton:hover {
+    background-color: #3a3d41;
+}
+
+#activityButton[activityActive="true"] {
+    background-color: #094771;
+    border-left: 2px solid #0e639c;
+}

@@ -75,12 +75,23 @@ web-IDE/
 |   |   |-- PreviewSessionManager.cpp
 |   |   |-- PreviewSessionManager.h
 |   |-- runtime/
-|   |   |-- LocalApiBridge.cpp
-|   |   |-- LocalApiBridge.h
-|   |   |-- ScriptExecutionContext.cpp
-|   |   |-- ScriptExecutionContext.h
-|   |   |-- SecurityPolicy.cpp
-|   |   |-- SecurityPolicy.h
+|   |   |-- LocalServerManager.cpp
+|   |   |-- LocalServerManager.h
+|   |   |-- NodeRuntime.cpp
+|   |   |-- NodeRuntime.h
+|   |   |-- PhpRuntime.cpp
+|   |   |-- PhpRuntime.h
+|   |   |-- ProcessManager.cpp
+|   |   |-- ProcessManager.h
+|   |   |-- PythonRuntime.cpp
+|   |   |-- PythonRuntime.h
+|   |   |-- RuntimeBase.cpp
+|   |   |-- RuntimeBase.h
+|   |   |-- RuntimeEnvironment.h
+|   |   |-- RuntimeManager.cpp
+|   |   |-- RuntimeManager.h
+|   |   |-- TerminalBridge.cpp
+|   |   |-- TerminalBridge.h
 |   |-- shared/
 |   |   |-- dto/
 |   |   |-- types/
@@ -94,6 +105,12 @@ web-IDE/
 |   |   |-- MenuController.h
 |   |   |-- StatusBarController.cpp
 |   |   |-- StatusBarController.h
+|   |   |-- sidebar/
+|   |   |   |-- ActivityDefinitions.h
+|   |   |   |-- ActivityPanelHost.cpp
+|   |   |   |-- ActivityPanelHost.h
+|   |   |   |-- ActivitySidebar.cpp
+|   |   |   |-- ActivitySidebar.h
 |   |-- sync/
 |   |   |-- ChangeSet.h
 |   |   |-- ConflictResolver.cpp
@@ -101,8 +118,15 @@ web-IDE/
 |   |   |-- SyncCoordinator.cpp
 |   |   |-- SyncCoordinator.h
 |   |-- ui/
-|   |   |-- widgets/
-|   |   |-- windows/
+|   |   |-- runtime/
+|   |   |   |-- ProcessMonitorWidget.cpp
+|   |   |   |-- ProcessMonitorWidget.h
+|   |   |   |-- RuntimePanel.cpp
+|   |   |   |-- RuntimePanel.h
+|   |   |   |-- RuntimeSettingsWidget.cpp
+|   |   |   |-- RuntimeSettingsWidget.h
+|   |   |   |-- ServerControlWidget.cpp
+|   |   |   |-- ServerControlWidget.h
 |   |-- utils/
 |   |-- workspace/
 |   |   |-- FileSystemService.cpp

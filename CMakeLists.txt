@@ -52,6 +52,11 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
   add_library(webide_shell STATIC
     src/shell/MainWindow.cpp
     src/shell/MainWindow.h
+    src/shell/sidebar/ActivityDefinitions.h
+    src/shell/sidebar/ActivitySidebar.cpp
+    src/shell/sidebar/ActivitySidebar.h
+    src/shell/sidebar/ActivityPanelHost.cpp
+    src/shell/sidebar/ActivityPanelHost.h
     src/shell/DockLayoutManager.cpp
     src/shell/DockLayoutManager.h
     src/shell/StatusBarController.cpp
@@ -70,6 +75,14 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
     src/shell/widgets/TerminalWidget.h
     src/shell/widgets/NetworkWidget.cpp
     src/shell/widgets/NetworkWidget.h
+    src/ui/runtime/RuntimePanel.cpp
+    src/ui/runtime/RuntimePanel.h
+    src/ui/runtime/ServerControlWidget.cpp
+    src/ui/runtime/ServerControlWidget.h
+    src/ui/runtime/ProcessMonitorWidget.cpp
+    src/ui/runtime/ProcessMonitorWidget.h
+    src/ui/runtime/RuntimeSettingsWidget.cpp
+    src/ui/runtime/RuntimeSettingsWidget.h
   )
   target_link_libraries(webide_shell PUBLIC webide_core Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql Qt6::WebEngineWidgets Qt6::WebEngineCore)
   webide_set_common_warnings(webide_shell)
@@ -140,15 +153,27 @@ if(WEBIDE_ENABLE_DESKTOP_APP)
   webide_set_common_warnings(webide_database)
 
   add_library(webide_runtime STATIC
-    src/runtime/LocalApiBridge.cpp
-    src/runtime/LocalApiBridge.h
-    src/runtime/ScriptExecutionContext.cpp
-    src/runtime/ScriptExecutionContext.h
-    src/runtime/SecurityPolicy.cpp
-    src/runtime/SecurityPolicy.h
+    src/runtime/RuntimeEnvironment.h
+    src/runtime/RuntimeBase.cpp
+    src/runtime/RuntimeBase.h
+    src/runtime/PhpRuntime.cpp
+    src/runtime/PhpRuntime.h
+    src/runtime/NodeRuntime.cpp
+    src/runtime/NodeRuntime.h
+    src/runtime/PythonRuntime.cpp
+    src/runtime/PythonRuntime.h
+    src/runtime/ProcessManager.cpp
+    src/runtime/ProcessManager.h
+    src/runtime/LocalServerManager.cpp
+    src/runtime/LocalServerManager.h
+    src/runtime/RuntimeManager.cpp
+    src/runtime/RuntimeManager.h
+    src/runtime/TerminalBridge.cpp
+    src/runtime/TerminalBridge.h
   )
-  target_link_libraries(webide_runtime PUBLIC webide_core Qt6::Core)
+  target_link_libraries(webide_runtime PUBLIC webide_core Qt6::Core Qt6::Network)
   webide_set_common_warnings(webide_runtime)
+  target_link_libraries(webide_shell PUBLIC webide_runtime)
 
   add_library(webide_sync STATIC
     src/sync/SyncCoordinator.cpp

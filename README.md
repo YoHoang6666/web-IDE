@@ -46,6 +46,10 @@ web-ide/
 ### Shell layer
 
 Qt Widgets, `QMainWindow`, `QDockWidget`, and `QSplitter` provide the native shell, docking, layout presets, menus, and window-level command routing.
+The shell now uses a VS Code-like **dual left sidebar**:
+
+- **Outer activity bar** (icon-only): Explorer, Search, Git, Database, Runtime, Preview, Network, DevTools, Extensions, Settings
+- **Inner dynamic sidebar**: one activity panel visible at a time with persisted state and keyboard shortcuts
 
 ### Domain services
 
@@ -53,6 +57,7 @@ Qt Widgets, `QMainWindow`, `QDockWidget`, and `QSplitter` provide the native she
 - `editor`: tabbed editing, document buffers, language-service bridge
 - `preview`: embedded browser host, session routing, live reload, devtools
 - `database`: SQLite connections, query execution, editable result models
+- `runtime`: runtime discovery and process orchestration for PHP/Node/Python and local server management
 - `sync`: change normalization, conflict policy, cross-module propagation
 
 ### Infrastructure
